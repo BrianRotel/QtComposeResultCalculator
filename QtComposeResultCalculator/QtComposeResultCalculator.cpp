@@ -283,14 +283,19 @@ void QtComposeResultCalculator::showLine()
 void QtComposeResultCalculator::insertCompose()
 {
     if (currentItemText.isEmpty()) return;
-    QtSetCompose* setCompose = new QtSetCompose(this, readKeys());
-    QObject::connect(setCompose, SIGNAL(sendKV(QMap<QString, int>)), this, SLOT(getKVFromChild(QMap<QString, int>)));
+    QStringList listKeys = readKeys();
+    listKeys.remove(listKeys.indexOf(currentItemText));
+    QtSetCompose* setCompose = new QtSetCompose(this, listKeys);
+    QObject::connect(setCompose, SIGNAL(sendKV(QMap<QString, int>)), this, SLOT(getKVFromChildWindow(QMap<QString, int>)));
     //setCompose->setKeys(readKeys());
+    QVariantMap vMap = getValue(currentItemText);
+    setCompose->setCurrentValues(vMap);
+
     setCompose->show();
 
 }
 
-void QtComposeResultCalculator::getKVFromChild(QMap<QString, int> map)
+void QtComposeResultCalculator::getKVFromChildWindow(QMap<QString, int> map)
 {
     // QMap<QString, int>::iterator it = map.begin();
     QMap<QString, QVariant> vmap;
@@ -323,7 +328,23 @@ void QtComposeResultCalculator::getKVFromChild(QMap<QString, int> map)
     //}
 }
 
-void QtComposeResultCalculator::setKV(QString str,QMap<QString, int>map)
+QVariantMap QtComposeResultCalculator::getValue(QString key)
 {
-    //QMetaType::canConvert(QMap,Q);
+    //读取文件
+    QFile file("../my.json");
+    file.open(QFile::ReadOnly);
+    QByteArray all = file.readAll();
+    file.close();
+
+    QJsonDocument doc = QJsonDocument::fromJson(all);//转换成文档对象
+    if (doc.isObject())//可以不做格式判断，因为，解析的时候已经知道是什么数据了
+    {
+        QJsonObject obj = doc.object(); //得到Json对象
+        QVariantMap vMap = obj.toVariantMap();
+        QVariant value = vMap.value(key);
+        if (value.canConvert(QMetaType::QVariantMap))
+        {
+            return value.toMap();
+        }
+    }
 }

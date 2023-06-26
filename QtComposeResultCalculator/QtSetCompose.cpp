@@ -8,8 +8,8 @@ QtSetCompose::QtSetCompose(QWidget *parent, QStringList list)
 	ui.setupUi(this);
 
 	//构造默认调用两遍?
-	clickButtonAdd();
-	clickButtonAdd();
+	//clickButtonAdd();
+	//clickButtonAdd();
 	//gList = new QStringList("");
 	QObject::connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(clickButtonAdd()));
 	QObject::connect(ui.pushButton_2, SIGNAL(clicked()), this, SLOT(clickButtonDel()));
@@ -19,16 +19,31 @@ QtSetCompose::QtSetCompose(QWidget *parent, QStringList list)
 QtSetCompose::~QtSetCompose()
 {}
 
-void QtSetCompose::setKeys(QStringList list)
+void QtSetCompose::setComboxKeys(QStringList list)
 {
 	gList = list;
 }
 
+void QtSetCompose::setCurrentValues(QVariantMap vMap)
+{
+	int count = ui.verticalLayout->count();
+	if (getChildWidgetCount() < 1)
+	{
+		QMap<QString,QVariant>::iterator it = vMap.begin();
+		for (it; it != vMap.end(); it++)
+		{
+			clickButtonAdd(it.key(),it.value().toInt());
+		}
+	}
+}
 
-void QtSetCompose::clickButtonAdd()
+
+void QtSetCompose::clickButtonAdd(QString key, int v)
 {
 	QtChildWidget* childWiget = new QtChildWidget(this);
 	childWiget->setComboxList(gList);
+	childWiget->setCurrentKeyValue(key,v);
+	
 	int count = ui.verticalLayout->count();
 	//qDebug() << "增加之前垂直布局的数量:" << count;
 	if (count < 1)
@@ -71,4 +86,9 @@ void QtSetCompose::clickOk()
 		}
 	}
 	emit sendKV(smap);
+}
+
+int QtSetCompose::getChildWidgetCount()
+{
+	return ui.verticalLayout->count()-1;
 }

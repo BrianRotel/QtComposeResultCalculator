@@ -5,6 +5,7 @@ QtChildWidget::QtChildWidget(QWidget *parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
+	//ui.comboBox->setCurrentText("");
 	for (size_t i = 0; i < 100; i++)
 	{
 		gList.append(QString::number(i+1));
@@ -39,4 +40,10 @@ QMap<QString, int> QtChildWidget::getKeyValue()
 	}
 	return map;
 
+}
+
+void QtChildWidget::setCurrentKeyValue(QString key, int v)
+{
+	ui.comboBox->setCurrentText(key);
+	ui.comboBox_2->setCurrentText(QString::number(v));
 }

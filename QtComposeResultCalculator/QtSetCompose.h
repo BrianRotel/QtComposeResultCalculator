@@ -12,17 +12,22 @@ public:
 	QtSetCompose(QWidget *parent = nullptr,QStringList list = QStringList());
 	~QtSetCompose();
 
-	void setKeys(QStringList);
+	void setComboxKeys(QStringList);
+	void setCurrentValues(QVariantMap);
 
 
 public slots:
-	void clickButtonAdd();
+	void clickButtonAdd(QString key = QString(),int v = 0 );
 	void clickButtonDel();
 	void clickOk();
 signals:
 	void sendKV(QMap<QString,int>);
+
+private:
+	int getChildWidgetCount();
 private:
 	QStringList gList;
+
 private:
 	Ui::QtSetComposeClass ui;
 };

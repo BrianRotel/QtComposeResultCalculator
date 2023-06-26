@@ -21,6 +21,8 @@ public:
 
     QStringList readKeys();
 
+    QVariantMap getValue(QString key);
+
 public slots:
     void clickButton();
     void tabCurrentChanged(int cur);
@@ -33,9 +35,7 @@ public slots:
 
     void insertCompose();
 
-    void getKVFromChild(QMap<QString,int>);
-
-    void setKV(QString str, QMap<QString, int>map);
+    void getKVFromChildWindow(QMap<QString,int>);
 
 private:
     QString currentItemText;
