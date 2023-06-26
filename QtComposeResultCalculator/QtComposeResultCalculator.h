@@ -35,6 +35,8 @@ public slots:
 
     void getKVFromChild(QMap<QString,int>);
 
+    void setKV(QString str, QMap<QString, int>map);
+
 private:
     QString currentItemText;
 

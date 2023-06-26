@@ -68,12 +68,30 @@ void QtComposeResultCalculator::writeKV(QJsonDocument doc, QString str, QJsonObj
     QJsonObject root = doc.object();
     //QJsonValue::Type t = root.value(str).type();
 
+    //QVariantMap vmap = root.toVariantMap();
+
     //非 被定义-->如果值没有被设置过,才会继续执行下面的写入值
     if (!root.value(str).isUndefined())
     {
-        return;
+        if (!&val)//值为空,返回
+        {
+            return;
+        }
+        //qDebug() << val.size();
+        //QJsonObject::iterator it = val.begin();
+        //for (it;it<val.end();it++)
+        //{
+        //    qDebug() << " key:" << it.key(); //<< " value:" << it.value();
+        //    QJsonValue::Type t = it.value().type();
+        //    if (t)
+        //    {
+        //        qDebug() << " value:" << it.value().toDouble();
+        //    }
+        //
+        //}
+        root[str] = val;
     }
-    root.insert(str, val);
+    else root.insert(str, val);
 
     QJsonDocument docN(root); //将Json对象，转换成Json文档
     QByteArray json = docN.toJson();
@@ -274,5 +292,38 @@ void QtComposeResultCalculator::insertCompose()
 
 void QtComposeResultCalculator::getKVFromChild(QMap<QString, int> map)
 {
-    qDebug() << "size:"<< map.size() << " key:" << map.firstKey() <<" value:" << map.first();
+    // QMap<QString, int>::iterator it = map.begin();
+    QMap<QString, QVariant> vmap;
+    QJsonObject ob;
+    //qDebug() << "size:" << map.size();
+
+    QVariant v = QVariant::fromValue(map);
+    if (!&v) 
+    {
+        QMessageBox::warning(this, "", "发生了一些错误");
+        return;
+    }
+    if (v.canConvert(QMetaType::QVariantMap))
+    {
+        vmap = v.toMap();
+        v = QVariant::fromValue(vmap);
+        if (v.canConvert(QMetaType::QJsonObject))
+        {
+            ob = v.toJsonObject();
+        }
+    }
+    QJsonDocument doc = readA();
+    writeKV(doc, currentItemText,ob);
+    //QMap<QString, int> vmap = v.value<QMap<QString, int>>();
+    //it = vmap.begin();
+
+    //for (it; it != vmap.end(); it++)
+    //{
+    //    qDebug() << " key:" << it.key() << " value:" << it.value();
+    //}
+}
+
+void QtComposeResultCalculator::setKV(QString str,QMap<QString, int>map)
+{
+    //QMetaType::canConvert(QMap,Q);
 }
