@@ -37,6 +37,65 @@ void QtSetCompose::setCurrentValues(QVariantMap vMap)
 	}
 }
 
+void QtSetCompose::setCurrentShow(QString str, QPixmap pixmap)
+{
+
+	//QBitmap bitM;
+	//bitM.createHeuristicMask(false);
+	//pixmap.setMask(bitM);
+#if 1
+	QImage image = pixmap.toImage();
+	image = image.convertToFormat(QImage::Format_ARGB32);
+	union myrgb
+	{
+		uint rgba;
+		uchar rgba_bits[4];
+	};
+	myrgb* mybits = (myrgb*)image.bits();
+	int len = image.width() * image.height();
+	while (len-- > 0)
+	{
+		if (mybits->rgba_bits[0] == 0 && mybits->rgba_bits[1] == 0 && mybits->rgba_bits[2] == 0)
+		{
+			mybits->rgba_bits[3] = (mybits->rgba == 0xFFFFFFFF) ? 255 : 0;
+		}
+		mybits++;
+	}
+#endif
+	//QBitmap alphaChannel = pixmap.createMaskFromColor(QColor(255, 255, 255, 255), Qt::MaskInColor);
+	//image.setAlphaChannel(alphaChannel.toImage());
+#if 0
+	QPixmap temp(pixmap.size());
+	temp.fill(Qt::transparent);
+
+	QPainter p1(&temp);
+	p1.setCompositionMode(QPainter::CompositionMode_Source);
+	p1.drawPixmap(0, 0, pixmap);
+	p1.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+
+	//根据QColor中第四个参数设置透明度，0～255
+	p1.fillRect(temp.rect(), QColor(0, 0, 0, 125));
+	p1.end();
+
+	pixmap = temp;
+#endif
+
+	//按照比例缩放
+	//QPixmap TempPixmap = pixmap.scaled(ui.label->width(), ui.label->height(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+	ui.label->setScaledContents(true);
+	ui.label->setPixmap(QPixmap::fromImage(image).scaled(100,100));
+	ui.label->setAlignment(Qt::AlignCenter);
+
+	//QString mQss = "border-image:url(:/image/bg.jpg);color:rgb(128,128,128);";
+	//ui.label->setStyleSheet(mQss);
+	//ui.label->setText("This is style sheet");
+	// tell the painter to draw on the QImage
+	//QPainter* painter = new QPainter(&pixmap); // sorry i forgot the "&"
+	//painter->setPen(Qt::blue);
+	//painter->setFont(QFont("Arial", 30));
+	//painter->drawText(pixmap.rect(), Qt::AlignCenter, str);
+}
+
 
 void QtSetCompose::clickButtonAdd(QString key, int v)
 {

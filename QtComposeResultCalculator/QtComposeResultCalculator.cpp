@@ -375,6 +375,8 @@ void QtComposeResultCalculator::insertCompose(QListWidgetItem * item)
     //setCompose->setKeys(readKeys());
     QVariantMap vMap = getValue(currentItemText);
     setCompose->setCurrentValues(vMap);
+
+    setCompose->setCurrentShow(currentItemText, pixMap.value(currentItemText));
     setCompose->exec();
 
 }
