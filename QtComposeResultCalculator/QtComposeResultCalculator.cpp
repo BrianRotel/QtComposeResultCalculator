@@ -35,12 +35,6 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
 #endif // 0
 
 
-
-
-
-
-
-
     ui.pushButton->setToolTip("点击写入文件");
 
     ui.listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
