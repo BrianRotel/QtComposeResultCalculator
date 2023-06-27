@@ -219,10 +219,13 @@ void QtComposeResultCalculator::tabCurrentChanged(int cur)
         ui.listWidget->clear();//效率低,尤其是数据量很大的时候应该会出现卡段,或者电脑配置低的,一些好的优化方法:检测add按钮,设置标记,然后更新listWidget,初始化读入数据,不必每次切换tab页的时候更新数据
         for (size_t i = 0; i < listKey.length(); i++)
         {
+
             QVariantMap vMap = getValue(listKey.at(i));
+            QListWidgetItem* item = new QListWidgetItem(ui.listWidget);
             if (!vMap.isEmpty())
             {
-                QString sStr = " = ";
+                //QString sStr = " = ";
+                QString sStr;
                 for (auto it = vMap.begin(); it != vMap.end(); it++)
                 {
                     sStr += it.key();
@@ -230,10 +233,13 @@ void QtComposeResultCalculator::tabCurrentChanged(int cur)
                     sStr += it.value().toString();
                     sStr += "   ";
                 }
-                listKey[i] = listKey.at(i) + sStr;
+                item->setToolTip(sStr);
             }
+
+            item->setText(listKey.at(i));
+            ui.listWidget->addItem(item);
+            ui.listWidget->setMouseTracking(true);
         }
-        ui.listWidget->addItems(listKey);
     }
 }
 
