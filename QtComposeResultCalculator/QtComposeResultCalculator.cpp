@@ -4,7 +4,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QPoint>
-#include <QImage >
+#include <QPixmap>
+#define BASESIZEBIG 18
+#define BASESIZELITT 14
 
 QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     : QWidget(parent)
@@ -24,21 +26,20 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     QObject::connect(ui.lineEdit, SIGNAL(textChanged(QString)), this, SLOT(lineEditChanged(QString)));
 
 
-    QImage  bitMap("ItemsAtlas.png");
-    if (&bitMap)
+    QPixmap pixmap("fix_0000_图层 31.png");
+    if (&pixmap)
     {
-        QSize size = bitMap.size();
-        int dep = bitMap.depth();
-        int i1 = bitMap.height();
-        //bool b1 = bitMap.hasAlpha();
-        bool b2 = bitMap.hasAlphaChannel();
-
-        //bool b3 = bitMap.isQBitmap();
-        int w = bitMap.width();
-        qint64 cache = bitMap.cacheKey();
-        qreal radio = bitMap.devicePixelRatio();
-        QSizeF sizeF = bitMap.deviceIndependentSize();
-        bitMap.detach();
+        for (size_t i = 0; i < 32; i++)
+        {
+            if (i)
+            {
+                list.append(pixmap.copy(i * BASESIZELITT + i, BASESIZEBIG + 1, BASESIZELITT, BASESIZELITT));
+            }
+            else
+            {
+                list.append(pixmap.copy(i * BASESIZELITT, BASESIZEBIG + 1, BASESIZELITT, BASESIZELITT));
+            }
+        }
     }
 
 }
