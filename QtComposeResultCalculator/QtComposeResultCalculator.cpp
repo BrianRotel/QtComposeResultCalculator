@@ -58,7 +58,29 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     {
         for (size_t i = 0; i < 32; i++)
         {
-            pixMap.insert(list.at(i), pixmap.copy(i * BASESIZELITT + i + 1, BASESIZEBIG + 1, BASESIZELITT, BASESIZELITT));
+
+            QPixmap temp = pixmap.copy(i * BASESIZELITT + i + 1, BASESIZEBIG + 1, BASESIZELITT, BASESIZELITT);
+            QImage image = temp.toImage();
+            image = image.convertToFormat(QImage::Format_ARGB32);
+            union myrgb
+            {
+                uint rgba;
+                uchar rgba_bits[4];
+            };
+            myrgb* mybits = (myrgb*)image.bits();
+            int len = image.width() * image.height();
+            while (len-- > 0)
+            {
+                if (mybits->rgba_bits[0] == 0 && mybits->rgba_bits[1] == 0 && mybits->rgba_bits[2] == 0)
+                {
+                    //mybits->rgba_bits[0] = 255;
+                    //mybits->rgba_bits[1] = 255;
+                    //mybits->rgba_bits[2] = 255;
+                    mybits->rgba_bits[3] = (mybits->rgba == 0xFFFFFFFF) ? 255 : 0;
+                }
+                mybits++;
+            }
+            pixMap.insert(list.at(i), QPixmap::fromImage(image));
         }
     }
 

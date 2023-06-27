@@ -36,7 +36,23 @@ void QtSetCompose::setCurrentValues(QVariantMap vMap)
 		}
 	}
 }
-
+void ConvertImageToTransparent(QPixmap qPixmap)
+{
+	QImage image = qPixmap.toImage();
+	image = image.convertToFormat(QImage::Format_ARGB32);
+	union myrgb
+	{
+		uint rgba;
+		uchar rgba_bits[4];
+	};
+	myrgb* mybits = (myrgb*)image.bits();
+	int len = image.width() * image.height();
+	while (len-- > 0)
+	{
+		mybits->rgba_bits[3] = (mybits->rgba == 0xFFFFFFFF) ? 0 : 255;
+		mybits++;
+	}
+}
 void QtSetCompose::setCurrentShow(QString str, QPixmap pixmap)
 {
 
@@ -44,6 +60,7 @@ void QtSetCompose::setCurrentShow(QString str, QPixmap pixmap)
 	//bitM.createHeuristicMask(false);
 	//pixmap.setMask(bitM);
 #if 1
+	//ConvertImageToTransparent(pixmap);
 	QImage image = pixmap.toImage();
 	image = image.convertToFormat(QImage::Format_ARGB32);
 	union myrgb
