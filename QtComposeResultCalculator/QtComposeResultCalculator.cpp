@@ -19,7 +19,9 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     currentItemText = "";
     //QObject::connect(ui.listWidget, &QWidget::customContextMenuRequested, this, &QtComposeResultCalculator::rightClickListWidget);
     QObject::connect(ui.listWidget, SIGNAL(customContextMenuRequested(const QPoint&)),this, SLOT(rightClickListWidget(const QPoint&)));
-
+    QObject::connect(ui.listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(insertCompose(QListWidgetItem*)));
+    QObject::connect(ui.listWidget, SIGNAL(itemPressed(QListWidgetItem *)), this, SLOT(listItemPressed(QListWidgetItem *)));
+    
     QObject::connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(clickButton()));
     QObject::connect(ui.pushButton_2, SIGNAL(clicked()), this, SLOT(clickButton2()));
     QObject::connect(ui.tabWidget, SIGNAL(currentChanged(int)), this, SLOT(tabCurrentChanged(int)));
@@ -295,7 +297,6 @@ void QtComposeResultCalculator::rightClickListWidget(const QPoint& pos)
         pMenu->addAction(pInsert);
         pMenu->addAction(pRename);
         pMenu->addAction(pCollect);
-        currentItemText = ui.listWidget->itemAt(pos)->text();
     }
 
     //在鼠标位置显示菜单
@@ -324,23 +325,24 @@ void QtComposeResultCalculator::showLine()
 
     ui.tabWidget->setCurrentIndex(0);
 }
-
-void QtComposeResultCalculator::insertCompose()
+void QtComposeResultCalculator::listItemPressed(QListWidgetItem* item)
+{
+    currentItemText = ui.listWidget->currentItem()->text();
+}
+//插入合成,也是双击的槽函数
+void QtComposeResultCalculator::insertCompose(QListWidgetItem * item)
 {
     if (currentItemText.isEmpty()) return;
     QStringList listKeys = readKeys();
-    if (currentItemText.indexOf("="))
-    {
-        currentItemText = currentItemText.left(currentItemText.indexOf("=")-1);
-    }
+
+    //从列表中移出自身,反正自己选择自己
     listKeys.remove(listKeys.indexOf(currentItemText));
     QtSetCompose* setCompose = new QtSetCompose(this, listKeys);
     QObject::connect(setCompose, SIGNAL(sendKV(QMap<QString, int>)), this, SLOT(getKVFromChildWindow(QMap<QString, int>)));
     //setCompose->setKeys(readKeys());
     QVariantMap vMap = getValue(currentItemText);
     setCompose->setCurrentValues(vMap);
-
-    setCompose->show();
+    setCompose->exec();
 
 }
 

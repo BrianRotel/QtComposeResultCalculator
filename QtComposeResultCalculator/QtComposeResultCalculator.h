@@ -33,7 +33,9 @@ public slots:
 
     void showLine();
 
-    void insertCompose();
+    void listItemPressed(QListWidgetItem* item);
+
+    void insertCompose(QListWidgetItem* item = nullptr);
 
     void getKVFromChildWindow(QMap<QString,int>);
 
