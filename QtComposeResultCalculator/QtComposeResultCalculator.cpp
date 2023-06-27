@@ -26,19 +26,14 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     QObject::connect(ui.lineEdit, SIGNAL(textChanged(QString)), this, SLOT(lineEditChanged(QString)));
 
 
-    QPixmap pixmap("fix_0000_图层 31.png");
+    QPixmap pixmap("C:/Users/Administrator/Pictures/fix_0000_图层 31.bmp");
+    QStringList list;
+    list << "伯希姆丁" << "伯希姆丁原件" << "伯希姆丁电池" << "先进的电子零件" << "塑料" << "塑钢" << "强力胶" << "智能传感器" << "生物燃料瓶" << "钢" << "铜矿石" << "木炭" << "树枝" << "沙子" << "润滑油" << "玻璃" << "玻璃瓶" << "智能传感器" << "电脑模块" << "超级计算机模块" << "空包裹" << "超级冷却液" << "超级强化金属" << "究极计算机模块" << "超级润滑剂" << "超级肥料" << "钛矿石" << "钛锭" << "铁矿石" << "铁锭" << "铜锭" << "镜头";
     if (&pixmap)
     {
         for (size_t i = 0; i < 32; i++)
         {
-            if (i)
-            {
-                list.append(pixmap.copy(i * BASESIZELITT + i, BASESIZEBIG + 1, BASESIZELITT, BASESIZELITT));
-            }
-            else
-            {
-                list.append(pixmap.copy(i * BASESIZELITT, BASESIZEBIG + 1, BASESIZELITT, BASESIZELITT));
-            }
+            pixMap.insert(list.at(i), pixmap.copy(i * BASESIZELITT + i + 1, BASESIZEBIG + 1, BASESIZELITT, BASESIZELITT));
         }
     }
 
@@ -215,6 +210,11 @@ void QtComposeResultCalculator::tabCurrentChanged(int cur)
     if (cur == 1)
     {
         QStringList listKey = readKeys();
+        ui.listWidget->setIconSize(QSize(125, 125));//设置单个Icon大小
+        ui.listWidget->setViewMode(QListView::ListMode);//设置显示模式
+        ui.listWidget->setFlow(QListView::TopToBottom);//从左到右
+        ui.listWidget->setResizeMode(QListView::Adjust);//大小自适应
+        ui.listWidget->setMovement(QListView::Static);//设置列表每一项不可移动
 
         ui.listWidget->clear();//效率低,尤其是数据量很大的时候应该会出现卡段,或者电脑配置低的,一些好的优化方法:检测add按钮,设置标记,然后更新listWidget,初始化读入数据,不必每次切换tab页的时候更新数据
         for (size_t i = 0; i < listKey.length(); i++)
@@ -235,10 +235,12 @@ void QtComposeResultCalculator::tabCurrentChanged(int cur)
                 }
                 item->setToolTip(sStr);
             }
-
+            //pixMap.value(listKey.at(i)),listKey.at(i),
+            //item->setTextAlignment(Qt::AlignHCenter);//设置文字对齐方式：水平居中
             item->setText(listKey.at(i));
+            item->setIcon(pixMap.value(listKey.at(i)).scaled(125,125));
             ui.listWidget->addItem(item);
-            ui.listWidget->setMouseTracking(true);
+            //ui.listWidget->setMouseTracking(true);
         }
     }
 }

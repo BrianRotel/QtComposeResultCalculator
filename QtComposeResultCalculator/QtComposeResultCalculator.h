@@ -39,7 +39,7 @@ public slots:
 
 private:
     QString currentItemText;
-    QList<QPixmap>list;
+    QMap<QString,QPixmap>pixMap;
 
 private:
     Ui::QtComposeResultCalculatorClass ui;
