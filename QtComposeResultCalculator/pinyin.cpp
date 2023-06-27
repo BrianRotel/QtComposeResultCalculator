@@ -1,4 +1,4 @@
-#include <string.h>
+ï»¿#include <string.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -6,9 +6,9 @@
 #define MAXBUFLEN 1024
 
 enum PinyinMode {
-    enmPinyinMode_AllUpper = 0,        //È«´óĞ´
-    enmPinyinMode_AllLower,            //È«Ğ¡Ğ´
-    enmPinyinMode_FirstUpper,        //Ê××ÖÄ¸´óĞ´
+    enmPinyinMode_AllUpper = 0,        //å…¨å¤§å†™
+    enmPinyinMode_AllLower,            //å…¨å°å†™
+    enmPinyinMode_FirstUpper,        //é¦–å­—æ¯å¤§å†™
 };
 
 const char* getPinyinByCode(uint32_t code);
@@ -18,7 +18,7 @@ int32_t test()
 {
     uint32_t bufLen = 0;
     char pinyinBuf[MAXBUFLEN] = { 0 };
-    const char* szChinese = "ÖĞ»ªÈËÃñ¹²ºÍ¹ú People's Republic of China";
+    const char* szChinese = "ä¸­åäººæ°‘å…±å’Œå›½ People's Republic of China";
     getPinyin(szChinese, pinyinBuf, &bufLen);
     printf("%s %d\n", pinyinBuf, bufLen);
     return 0;
@@ -33,7 +33,7 @@ void getPinyin(const char* szChinese, char pinyinBuf[],  uint32_t* bufLen, const
     for (i = 0; i < chineseLen; ++i)
     {
         uint8_t c = szChinese[i];
-        // ÅÅ³ıaskii Âë
+        // æ’é™¤askii ç 
         if (isascii(c))
         {
             pinyinBuf[(*bufLen)++] = c;
@@ -473,7 +473,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7684:
     case 8043:
     case 8457:
-        return "4337 ËÅ";
+        return "4337 ä¼º";
         break;
     case 6042:
     case 6840:
@@ -1647,7 +1647,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7918:
     case 7989:
     case 8158:
-        return "L¨¹";
+        return "LÃ¼";
         break;
     case 5968:
     case 6303:
@@ -1678,7 +1678,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8639:
         return "LUAN";
         break;
-        return "L¨µE";
+        return "LÇ–E";
         break;
         return "LUN";
         break;
@@ -1983,7 +1983,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7704:
     case 7847:
     case 8412:
-        return "N¨µ";
+        return "NÇ–";
         break;
         return "NUAN";
         break;
@@ -2689,8 +2689,8 @@ const char* getPinyinByCode(uint32_t code)
     case 7666:
         return "TAO";
         break;
-        return "1845 ²Í";
-        break;
+        //return "1845 é¤";
+        //break;
     case 6315:
     case 7693:
     case 7911:

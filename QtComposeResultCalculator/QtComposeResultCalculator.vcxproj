@@ -97,6 +97,9 @@
     <QtUic Include="QtChildWidget.ui" />
     <QtUic Include="QtComposeResultCalculator.ui" />
     <QtMoc Include="QtComposeResultCalculator.h" />
+    <ClCompile Include="pinyin.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="QtChildWidget.cpp" />
     <ClCompile Include="QtComposeResultCalculator.cpp" />
     <ClCompile Include="main.cpp" />
