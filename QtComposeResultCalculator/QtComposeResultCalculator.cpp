@@ -4,6 +4,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QPoint>
+#include <QImage >
 
 QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     : QWidget(parent)
@@ -21,6 +22,25 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     QObject::connect(ui.pushButton_2, SIGNAL(clicked()), this, SLOT(clickButton2()));
     QObject::connect(ui.tabWidget, SIGNAL(currentChanged(int)), this, SLOT(tabCurrentChanged(int)));
     QObject::connect(ui.lineEdit, SIGNAL(textChanged(QString)), this, SLOT(lineEditChanged(QString)));
+
+
+    QImage  bitMap("ItemsAtlas.png");
+    if (&bitMap)
+    {
+        QSize size = bitMap.size();
+        int dep = bitMap.depth();
+        int i1 = bitMap.height();
+        //bool b1 = bitMap.hasAlpha();
+        bool b2 = bitMap.hasAlphaChannel();
+
+        //bool b3 = bitMap.isQBitmap();
+        int w = bitMap.width();
+        qint64 cache = bitMap.cacheKey();
+        qreal radio = bitMap.devicePixelRatio();
+        QSizeF sizeF = bitMap.deviceIndependentSize();
+        bitMap.detach();
+    }
+
 }
 
 QtComposeResultCalculator::~QtComposeResultCalculator()
@@ -196,6 +216,22 @@ void QtComposeResultCalculator::tabCurrentChanged(int cur)
         QStringList listKey = readKeys();
 
         ui.listWidget->clear();//效率低,尤其是数据量很大的时候应该会出现卡段,或者电脑配置低的,一些好的优化方法:检测add按钮,设置标记,然后更新listWidget,初始化读入数据,不必每次切换tab页的时候更新数据
+        for (size_t i = 0; i < listKey.length(); i++)
+        {
+            QVariantMap vMap = getValue(listKey.at(i));
+            if (!vMap.isEmpty())
+            {
+                QString sStr = " = ";
+                for (auto it = vMap.begin(); it != vMap.end(); it++)
+                {
+                    sStr += it.key();
+                    sStr += ":";
+                    sStr += it.value().toString();
+                    sStr += "   ";
+                }
+                listKey[i] = listKey.at(i) + sStr;
+            }
+        }
         ui.listWidget->addItems(listKey);
     }
 }
@@ -284,6 +320,10 @@ void QtComposeResultCalculator::insertCompose()
 {
     if (currentItemText.isEmpty()) return;
     QStringList listKeys = readKeys();
+    if (currentItemText.indexOf("="))
+    {
+        currentItemText = currentItemText.left(currentItemText.indexOf("=")-1);
+    }
     listKeys.remove(listKeys.indexOf(currentItemText));
     QtSetCompose* setCompose = new QtSetCompose(this, listKeys);
     QObject::connect(setCompose, SIGNAL(sendKV(QMap<QString, int>)), this, SLOT(getKVFromChildWindow(QMap<QString, int>)));
