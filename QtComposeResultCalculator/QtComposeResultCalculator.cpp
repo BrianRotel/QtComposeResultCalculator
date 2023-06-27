@@ -5,79 +5,26 @@
 #include <QJsonArray>
 #include <QPoint>
 #include <QPixmap>
+#include <QTextCodec>
+#include "pinyin.h"
+#include "chineseletterhelper.h"
+
 #define BASESIZEBIG 18
 #define BASESIZELITT 14
-#include <QTextCodec>
 
-QString getChineseSpell(QString& src);
-QString FirstLetter(int nCode);
-char convert(int n);
-QString getChineseSpell(QString& src)
-{
-    QTextCodec* codec4gbk = QTextCodec::codecForName("GBK"); //获取qt提供的gbk的解码器
-    QByteArray buf = codec4gbk->fromUnicode(src); //qt用的unicode，转成gbk
-    int size = buf.size();
-    quint16* array = new quint16[size + 1];
-    QString alphbats;
-
-    for (int i = 0, j = 0; i < buf.size(); i++, j++)
-    {
-        if ((quint8)buf[i] < 0x80) //gbk的第一个字节都大于0x81，所以小于0x80的都是符号，字母，数字etc
-            continue;
-        array[j] = (((quint8)buf[i]) << 8) + (quint8)buf[i + 1]; //计算gbk编码
-        i++;
-        alphbats.append(convert(array[j])); //相当于查表，用gbk编码得到首拼音字母
-    }
-    delete[] array;
-    return alphbats;
-}
-
-bool In(wchar_t start, wchar_t end, wchar_t code)
-{
-    if (code >= start && code <= end)
-    {
-        return true;
-    }
-    return false;
-}
-
-char convert(int n)
-{
-    if (In(0xB0A1, 0xB0C4, n)) return 'a';
-    if (In(0XB0C5, 0XB2C0, n)) return 'b';
-    if (In(0xB2C1, 0xB4ED, n)) return 'c';
-    if (In(0xB4EE, 0xB6E9, n)) return 'd';
-    if (In(0xB6EA, 0xB7A1, n)) return 'e';
-    if (In(0xB7A2, 0xB8c0, n)) return 'f';
-    if (In(0xB8C1, 0xB9FD, n)) return 'g';
-    if (In(0xB9FE, 0xBBF6, n)) return 'h';
-    if (In(0xBBF7, 0xBFA5, n)) return 'j';
-    if (In(0xBFA6, 0xC0AB, n)) return 'k';
-    if (In(0xC0AC, 0xC2E7, n)) return 'l';
-    if (In(0xC2E8, 0xC4C2, n)) return 'm';
-    if (In(0xC4C3, 0xC5B5, n)) return 'n';
-    if (In(0xC5B6, 0xC5BD, n)) return 'o';
-    if (In(0xC5BE, 0xC6D9, n)) return 'p';
-    if (In(0xC6DA, 0xC8BA, n)) return 'q';
-    if (In(0xC8BB, 0xC8F5, n)) return 'r';
-    if (In(0xC8F6, 0xCBF0, n)) return 's';
-    if (In(0xCBFA, 0xCDD9, n)) return 't';
-    if (In(0xCDDA, 0xCEF3, n)) return 'w';
-    if (In(0xCEF4, 0xD188, n)) return 'x';
-    if (In(0xD1B9, 0xD4D0, n)) return 'y';
-    if (In(0xD4D1, 0xD7F9, n)) return 'z';
-    return '\0';
-}
 
 QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     : QWidget(parent)
 {
     ui.setupUi(this);
+    //QString tests = "中华人民共和国 People's Republic of China";
+    QString tests = tr("这是一个正确的例子");
+    QString firstLetter = ChineseLetterHelper::GetFirstLetter(tests);
+    QString firstLetters = ChineseLetterHelper::GetFirstLetters(tests);
+    QString pinyin = ChineseLetterHelper::GetPinyins(tests);
+    qDebug() << "firstLetter:" << firstLetter << "firstLetters:" << firstLetters << "pinyin:" << pinyin;
+    //备注：此部分代码在取单个二级字的首字母时无法得到相应的内容
 
-
-    QString str = tr("这是一个正确的例子");
-    QString character = getChineseSpell(str);
-    qDebug() << character;
 
     ui.pushButton->setToolTip("点击写入文件");
 
@@ -276,6 +223,7 @@ QStringList QtComposeResultCalculator::readKeys()
         QJsonObject obj = doc.object(); //得到Json对象
         return obj.keys(); //得到所有key
     }
+    return QStringList(); //得到所有key
 }
 
 void QtComposeResultCalculator::tabCurrentChanged(int cur)
@@ -312,7 +260,11 @@ void QtComposeResultCalculator::tabCurrentChanged(int cur)
             //pixMap.value(listKey.at(i)),listKey.at(i),
             //item->setTextAlignment(Qt::AlignHCenter);//设置文字对齐方式：水平居中
             item->setText(listKey.at(i));
-            item->setIcon(pixMap.value(listKey.at(i)).scaled(125,125));
+            //添加判断,否则debug会输出很多警告
+            if (!pixMap.value(listKey.at(i)).isNull())
+            {
+                item->setIcon(pixMap.value(listKey.at(i)).scaled(125, 125));
+            }
             ui.listWidget->addItem(item);
             //ui.listWidget->setMouseTracking(true);
         }
@@ -484,6 +436,7 @@ QVariantMap QtComposeResultCalculator::getValue(QString key)
             return value.toMap();
         }
     }
+    return QVariantMap();
 }
 
 

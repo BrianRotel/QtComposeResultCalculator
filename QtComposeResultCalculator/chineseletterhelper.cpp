@@ -1,54 +1,174 @@
-﻿#include "pinyin.h"
+﻿#include "stdafx.h"
+//#include <QDebug>
+#include "ChineseLetterHelper.h"
 
-
-void getPinyin(const char* szChinese, char pinyinBuf[],  uint32_t* bufLen, const uint32_t maxBufLen, const uint32_t mode)
+bool ChineseLetterHelper::In(wchar_t start, wchar_t end, wchar_t code)
 {
-    *bufLen = 0;
-    uint8_t ucHigh, ucLow;
-    uint32_t code, i, j;
-    const uint32_t chineseLen = strlen(szChinese);
-    for (i = 0; i < chineseLen; ++i)
+    if (code >= start && code <= end)
     {
-        uint8_t c = szChinese[i];
-        // 排除askii 码
-        if (isascii(c))
+        return true;
+    }
+    return false;
+}
+
+char ChineseLetterHelper::Convert(int n)
+{
+    /*
+     * GB2312码范围 (B0A1-F7FE)
+     * HiByte (B0-F7) LoByte (A1-FE)
+     *
+     * GBK编码范围 (8140-FEFE)
+     * 包含三大部分
+     * 1.汉字区
+     *      a. GB2312汉字区。即GBK/2
+     *      b. GB13000.1扩充汉字区。包括GBK/3(CJK汉字)和GBK/4(CJK汉字和增补汉字)
+     * 2.图形符号区
+     *      a. GB2312非汉字区。即GBK/1 A1A1-A9FE。还有10个小写罗马数字和GB12345增补符号
+     *      b. GB13000.1扩充非汉字区。即GBK/5 A840-A9A0非汉字符号、结构符...
+     * 3.用户自定义区
+     *
+     */
+
+    if (In(0xB0A1, 0xB0C4, n)) return 'A';
+    if (In(0XB0C5, 0XB2C0, n)) return 'B';
+    if (In(0xB2C1, 0xB4ED, n)) return 'C';
+    if (In(0xB4EE, 0xB6E9, n)) return 'D';
+    if (In(0xB6EA, 0xB7A1, n)) return 'E';
+    if (In(0xB7A2, 0xB8c0, n)) return 'F';
+    if (In(0xB8C1, 0xB9FD, n)) return 'G';
+    if (In(0xB9FE, 0xBBF6, n)) return 'H';
+    if (In(0xBBF7, 0xBFA5, n)) return 'J';
+    if (In(0xBFA6, 0xC0AB, n)) return 'K';
+    if (In(0xC0AC, 0xC2E7, n)) return 'L';
+    if (In(0xC2E8, 0xC4C2, n)) return 'M';
+    if (In(0xC4C3, 0xC5B5, n)) return 'N';
+    if (In(0xC5B6, 0xC5BD, n)) return 'O';
+    if (In(0xC5BE, 0xC6D9, n)) return 'P';
+    if (In(0xC6DA, 0xC8BA, n)) return 'Q';
+    if (In(0xC8BB, 0xC8F5, n)) return 'R';
+    if (In(0xC8F6, 0xCBF0, n)) return 'S';
+    if (In(0xCBFA, 0xCDD9, n)) return 'T';
+    if (In(0xCDDA, 0xCEF3, n)) return 'W';
+    if (In(0xCEF4, 0xD188, n)) return 'X';
+    if (In(0xD1B9, 0xD4D0, n)) return 'Y';
+    if (In(0xD4D1, 0xD7F9, n)) return 'Z';
+    if (In(0x00, 0x7f, n)) return n;
+    return '\0';
+}
+
+QString ChineseLetterHelper::GetFirstLetter(const QString& src)
+{
+    wchar_t wchr;
+    QString firstLetter;
+    if (src.size() > 0)
+    {
+        QString str = src.at(0);
+        QByteArray arr = str.toLocal8Bit();
+        if (arr.size() == 1)
         {
-            pinyinBuf[(*bufLen)++] = c;
-            continue;
+            wchr = arr.at(0) & 0xff;
         }
-        ucHigh = (uint8_t)szChinese[i];
-        ucLow = (uint8_t)szChinese[++i];
-        if (ucHigh <= 0xa0 || ucLow <= 0xa0)
+        else if (arr.size() == 2)
+        {
+            wchr = (arr.at(0) & 0xff) << 8;
+            wchr |= (arr.at(1) & 0xff);
+        }
+        else
+        {
+            //qDebug() << "unknown word";
+        }
+        //qDebug() << wchr;
+        char c = Convert(wchr);
+        if (c != 0)
+        {
+            firstLetter.append(c);
+        }
+    }
+
+    return firstLetter;
+}
+
+QString ChineseLetterHelper::GetFirstLetters(const QString& src)
+{
+    QString firstLetters;
+    for (int i = 0; i < src.length(); i++)
+    {
+        QString str = src.at(i);
+        QByteArray arr = str.toLocal8Bit();
+        wchar_t wchr;
+
+        if (arr.size() == 1)
+        {
+            wchr = arr.at(0) & 0xff;
+        }
+        else if (arr.size() == 2)
+        {
+            wchr = (arr.at(0) & 0xff) << 8;
+            wchr |= (arr.at(1) & 0xff);
+        }
+        else
+        {
+            //qDebug() << "unknown word";
+        }
+
+        char c = Convert(wchr);
+        if (c != 0)
+        {
+            firstLetters.append(c);
+        }
+    }
+    return firstLetters;
+}
+
+
+QString ChineseLetterHelper::GetPinyins(const QString& text)
+{
+    QString pinyins;
+    for (int i = 0; i < text.length(); i++)
+    {
+        QString str = text.at(i);
+        QByteArray arr = str.toLocal8Bit();
+        unsigned char high = 0;
+        unsigned char low = 0;
+        int code = 0;
+
+        if (arr.size() == 1)
+        {
+            high = 0;
+            low = arr.at(0) & 0xff;
+        }
+        else if (arr.size() == 2)
+        {
+            high = arr.at(0) & 0xff;
+            low = arr.at(1) & 0xff;
+        }
+
+        if (high < 0xa1 || low < 0xa1)
         {
             continue;
         }
         else
         {
-            code = (ucHigh - 0xa0) * 100 + ucLow - 0xa0;
+            code = (high - 0xa0) * 100 + low - 0xa0;
         }
-        const char* pBuf = getPinyinByCode(code);
-        for (j = 0; j < strlen(pBuf) && (*bufLen) < maxBufLen; ++j)
-        {
-            char cc = pBuf[j];
-            switch (mode)
-            {
-            case enmPinyinMode_AllUpper:break;
-            case enmPinyinMode_AllLower:cc = tolower(cc); break;
-            case enmPinyinMode_FirstUpper:if (j != 0)cc = tolower(cc); break;
-            }
-            pinyinBuf[(*bufLen)++] = cc;
-        }
+
+        pinyins += GetPinyin(code);
+        pinyins += "'";
     }
+    return pinyins;
 }
-const char* getPinyinByCode(uint32_t code)
+
+
+QString ChineseLetterHelper::GetPinyin(int code)
 {
+    QString pinyin;
     switch (code)
     {
     case 6325:
     case 6436:
     case 7571:
     case 7925:
-        return "A";
+        pinyin = "A";
         break;
     case 6263:
     case 6440:
@@ -58,7 +178,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7733:
     case 7945:
     case 8616:
-        return "AI";
+        pinyin = "AI";
         break;
     case 5847:
     case 5991:
@@ -69,9 +189,9 @@ const char* getPinyinByCode(uint32_t code)
     case 7907:
     case 8038:
     case 8786:
-        return "AN";
+        pinyin = "AN";
         break;
-        return "ANG";
+        pinyin = "ANG";
         break;
     case 5974:
     case 6254:
@@ -87,7 +207,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8643:
     case 8701:
     case 8773:
-        return "AO";
+        pinyin = "AO";
         break;
     case 6056:
     case 6135:
@@ -96,12 +216,12 @@ const char* getPinyinByCode(uint32_t code)
     case 8446:
     case 8649:
     case 8741:
-        return "BA";
+        pinyin = "BA";
         break;
     case 6267:
     case 6334:
     case 7494:
-        return "BAI";
+        pinyin = "BAI";
         break;
     case 5870:
     case 5964:
@@ -109,11 +229,11 @@ const char* getPinyinByCode(uint32_t code)
     case 8103:
     case 8113:
     case 8418:
-        return "BAN";
+        pinyin = "BAN";
         break;
     case 6182:
     case 6826:
-        return "BANG";
+        pinyin = "BANG";
         break;
     case 6165:
     case 7063:
@@ -122,7 +242,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8157:
     case 8532:
     case 8621:
-        return "BAO";
+        pinyin = "BAO";
         break;
     case 5635:
     case 5873:
@@ -135,17 +255,17 @@ const char* getPinyinByCode(uint32_t code)
     case 8156:
     case 8645:
     case 8725:
-        return "BEI";
+        pinyin = "BEI";
         break;
     case 5946:
     case 5948:
     case 7458:
     case 7928:
-        return "BEN";
+        pinyin = "BEN";
         break;
     case 6452:
     case 7420:
-        return "BENG";
+        pinyin = "BENG";
         break;
     case 5616:
     case 5734:
@@ -175,7 +295,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8437:
     case 8547:
     case 8734:
-        return "BI";
+        pinyin = "BI";
         break;
     case 5650:
     case 5945:
@@ -192,7 +312,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8289:
     case 8354:
     case 8693:
-        return "BIAN";
+        pinyin = "BIAN";
         break;
     case 7027:
     case 7084:
@@ -204,10 +324,10 @@ const char* getPinyinByCode(uint32_t code)
     case 8149:
     case 8707:
     case 8752:
-        return "BIAO";
+        pinyin = "BIAO";
         break;
     case 8531:
-        return "BIE";
+        pinyin = "BIE";
         break;
     case 5747:
     case 6557:
@@ -219,12 +339,12 @@ const char* getPinyinByCode(uint32_t code)
     case 7957:
     case 8738:
     case 8762:
-        return "BIN";
+        pinyin = "BIN";
         break;
     case 5787:
     case 5891:
     case 6280:
-        return "BING";
+        pinyin = "BING";
         break;
     case 5781:
     case 6403:
@@ -237,7 +357,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8404:
     case 8543:
     case 8559:
-        return "BO";
+        pinyin = "BO";
         break;
     case 6318:
     case 6945:
@@ -246,39 +366,39 @@ const char* getPinyinByCode(uint32_t code)
     case 7848:
     case 7863:
     case 8519:
-        return "BU";
+        pinyin = "BU";
         break;
     case 6474:
     case 7769:
-        return "CA";
+        pinyin = "CA";
         break;
-        return "CAI";
+        pinyin = "CAI";
         break;
     case 6978:
     case 7078:
     case 7218:
     case 8451:
     case 8785:
-        return "CAN";
+        pinyin = "CAN";
         break;
     case 5687:
-        return "CANG";
+        pinyin = "CANG";
         break;
     case 6448:
     case 6878:
     case 8309:
     case 8429:
-        return "CAO";
+        pinyin = "CAO";
         break;
     case 6692:
-        return "CE";
+        pinyin = "CE";
         break;
     case 6515:
     case 6825:
-        return "CEN";
+        pinyin = "CEN";
         break;
     case 6465:
-        return "CENG";
+        pinyin = "CENG";
         break;
     case 6639:
     case 6766:
@@ -290,13 +410,13 @@ const char* getPinyinByCode(uint32_t code)
     case 7942:
     case 7979:
     case 8135:
-        return "CHA";
+        pinyin = "CHA";
         break;
     case 5713:
     case 7846:
     case 8091:
     case 8218:
-        return "CHAI";
+        pinyin = "CHAI";
         break;
     case 5770:
     case 5838:
@@ -312,7 +432,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7966:
     case 8324:
     case 8580:
-        return "CHAN";
+        pinyin = "CHAN";
         break;
     case 5686:
     case 5943:
@@ -326,16 +446,16 @@ const char* getPinyinByCode(uint32_t code)
     case 7438:
     case 7509:
     case 8680:
-        return "CHANG";
+        pinyin = "CHANG";
         break;
     case 6687:
     case 7443:
     case 8173:
-        return "CHAO";
+        pinyin = "CHAO";
         break;
     case 5969:
     case 7726:
-        return "CHE";
+        pinyin = "CHE";
         break;
     case 5840:
     case 5863:
@@ -346,7 +466,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7320:
     case 7755:
     case 8619:
-        return "CHEN";
+        pinyin = "CHEN";
         break;
     case 5609:
     case 5984:
@@ -359,7 +479,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8146:
     case 8241:
     case 8508:
-        return "CHENG";
+        pinyin = "CHENG";
         break;
     case 5749:
     case 6015:
@@ -382,21 +502,21 @@ const char* getPinyinByCode(uint32_t code)
     case 8489:
     case 8556:
     case 8746:
-        return "CHI";
+        pinyin = "CHI";
         break;
     case 6091:
     case 6671:
     case 6731:
     case 8409:
     case 8430:
-        return "CHONG";
+        pinyin = "CHONG";
         break;
     case 5717:
     case 6492:
     case 6716:
     case 8112:
     case 8637:
-        return "CHOU";
+        pinyin = "CHOU";
         break;
     case 5601:
     case 5927:
@@ -410,47 +530,47 @@ const char* getPinyinByCode(uint32_t code)
     case 8260:
     case 8573:
     case 8777:
-        return "CHU";
+        pinyin = "CHU";
         break;
     case 6285:
     case 6408:
     case 7590:
     case 8563:
-        return "CHUAI";
+        pinyin = "CHUAI";
         break;
     case 6622:
     case 6955:
     case 7516:
     case 7843:
     case 8413:
-        return "CHUAN";
+        pinyin = "CHUAN";
         break;
     case 6675:
-        return "CHUANG";
+        pinyin = "CHUANG";
         break;
     case 5879:
     case 7302:
     case 7319:
-        return "CHUI";
+        pinyin = "CHUI";
         break;
     case 6127:
     case 8040:
     case 8277:
-        return "CHUN";
+        pinyin = "CHUN";
         break;
     case 7401:
     case 8554:
     case 8626:
-        return "CHUO";
+        pinyin = "CHUO";
         break;
-        return "CI";
+        pinyin = "CI";
         break;
     case 6075:
     case 6358:
     case 7684:
     case 8043:
     case 8457:
-        return "4337 伺";
+        pinyin = "4337 伺";
         break;
     case 6042:
     case 6840:
@@ -458,12 +578,12 @@ const char* getPinyinByCode(uint32_t code)
     case 7193:
     case 7214:
     case 7240:
-        return "CONG";
+        pinyin = "CONG";
         break;
     case 7308:
     case 7403:
     case 7577:
-        return "COU";
+        pinyin = "COU";
         break;
     case 6180:
     case 6562:
@@ -472,13 +592,13 @@ const char* getPinyinByCode(uint32_t code)
     case 8501:
     case 8530:
     case 8577:
-        return "CU";
+        pinyin = "CU";
         break;
     case 5764:
     case 6305:
     case 7664:
     case 7973:
-        return "CUAN";
+        pinyin = "CUAN";
         break;
     case 6718:
     case 6145:
@@ -487,11 +607,11 @@ const char* getPinyinByCode(uint32_t code)
     case 7333:
     case 7505:
     case 8631:
-        return "CUI";
+        pinyin = "CUI";
         break;
     case 6666:
     case 8169:
-        return "CUN";
+        pinyin = "CUN";
         break;
     case 5640:
     case 6547:
@@ -501,7 +621,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8078:
     case 8526:
     case 8567:
-        return "CUO";
+        pinyin = "CUO";
         break;
     case 6239:
     case 6353:
@@ -512,7 +632,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8346:
     case 8716:
     case 8718:
-        return "DA";
+        pinyin = "DA";
         break;
     case 6004:
     case 6316:
@@ -521,7 +641,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7110:
     case 7173:
     case 8776:
-        return "DAI";
+        pinyin = "DAI";
         break;
     case 5757:
     case 6144:
@@ -533,7 +653,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8087:
     case 8185:
     case 8376:
-        return "DAN";
+        pinyin = "DAN";
         break;
     case 5852:
     case 5942:
@@ -542,16 +662,16 @@ const char* getPinyinByCode(uint32_t code)
     case 7724:
     case 7885:
     case 8141:
-        return "DANG";
+        pinyin = "DANG";
         break;
     case 6322:
     case 6665:
     case 7514:
     case 8478:
-        return "DAO";
+        pinyin = "DAO";
         break;
     case 7929:
-        return "DE";
+        pinyin = "DE";
         break;
     case 6466:
     case 6556:
@@ -559,7 +679,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7767:
     case 7975:
     case 8403:
-        return "DENG";
+        pinyin = "DENG";
         break;
     case 5621:
     case 5765:
@@ -580,10 +700,10 @@ const char* getPinyinByCode(uint32_t code)
     case 7965:
     case 8438:
     case 8730:
-        return "DI";
+        pinyin = "DI";
         break;
     case 6439:
-        return "DIA";
+        pinyin = "DIA";
         break;
     case 5871:
     case 5967:
@@ -594,12 +714,12 @@ const char* getPinyinByCode(uint32_t code)
     case 8118:
     case 8401:
     case 8558:
-        return "DIAN";
+        pinyin = "DIAN";
         break;
     case 7886:
     case 8585:
     case 8684:
-        return "DIAO";
+        pinyin = "DIAO";
         break;
     case 5976:
     case 6006:
@@ -610,7 +730,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8183:
     case 8562:
     case 8688:
-        return "DIE";
+        pinyin = "DIE";
         break;
     case 5674:
     case 6404:
@@ -621,10 +741,10 @@ const char* getPinyinByCode(uint32_t code)
     case 8059:
     case 8184:
     case 8490:
-        return "DING";
+        pinyin = "DING";
         break;
     case 7891:
-        return "DIU";
+        pinyin = "DIU";
         break;
     case 5977:
     case 6343:
@@ -635,13 +755,13 @@ const char* getPinyinByCode(uint32_t code)
     case 7556:
     case 7747:
     case 8020:
-        return "DONG";
+        pinyin = "DONG";
         break;
     case 6190:
     case 8128:
     case 8229:
     case 8391:
-        return "DOU";
+        pinyin = "DOU";
         break;
     case 6022:
     case 6429:
@@ -652,17 +772,17 @@ const char* getPinyinByCode(uint32_t code)
     case 8338:
     case 8739:
     case 8782:
-        return "DU";
+        pinyin = "DU";
         break;
     case 7318:
     case 7649:
     case 8393:
-        return "DUAN";
+        pinyin = "DUAN";
         break;
     case 7701:
     case 7713:
     case 7752:
-        return "DUI";
+        pinyin = "DUI";
         break;
     case 6771:
     case 7632:
@@ -671,7 +791,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7779:
     case 7970:
     case 8527:
-        return "DUN";
+        pinyin = "DUN";
         break;
     case 6345:
     case 6365:
@@ -680,7 +800,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7876:
     case 8154:
     case 8566:
-        return "DUO";
+        pinyin = "DUO";
         break;
     case 5612:
     case 5832:
@@ -700,11 +820,11 @@ const char* getPinyinByCode(uint32_t code)
     case 8042:
     case 8206:
     case 8689:
-        return "E";
+        pinyin = "E";
         break;
     case 6176:
     case 6284:
-        return "EN";
+        pinyin = "EN";
         break;
     case 5706:
     case 6939:
@@ -712,11 +832,11 @@ const char* getPinyinByCode(uint32_t code)
     case 7879:
     case 8025:
     case 8660:
-        return "ER";
+        pinyin = "ER";
         break;
     case 5950:
     case 7732:
-        return "FA";
+        pinyin = "FA";
         break;
     case 6212:
     case 6232:
@@ -725,14 +845,14 @@ const char* getPinyinByCode(uint32_t code)
     case 7660:
     case 7818:
     case 8576:
-        return "FAN";
+        pinyin = "FAN";
         break;
     case 5890:
     case 7242:
     case 7853:
     case 8419:
     case 8648:
-        return "FANG";
+        pinyin = "FANG";
         break;
     case 6032:
     case 6584:
@@ -751,14 +871,14 @@ const char* getPinyinByCode(uint32_t code)
     case 8468:
     case 8613:
     case 8678:
-        return "FEI";
+        pinyin = "FEI";
         break;
     case 5739:
     case 6915:
     case 7291:
     case 8687:
     case 8787:
-        return "FEN";
+        pinyin = "FEN";
         break;
     case 5726:
     case 5926:
@@ -766,12 +886,12 @@ const char* getPinyinByCode(uint32_t code)
     case 6384:
     case 6767:
     case 7731:
-        return "FENG";
+        pinyin = "FENG";
         break;
-        return "FO";
+        pinyin = "FO";
         break;
     case 8330:
-        return "FOU";
+        pinyin = "FOU";
         break;
     case 5775:
     case 5776:
@@ -808,21 +928,21 @@ const char* getPinyinByCode(uint32_t code)
     case 8538:
     case 8654:
     case 8691:
-        return "FU";
+        pinyin = "FU";
         break;
     case 6246:
     case 7056:
     case 7057:
     case 7424:
     case 7837:
-        return " GA";
+        pinyin = " GA";
         break;
     case 5604:
     case 5875:
     case 5982:
     case 7414:
     case 7464:
-        return "GAI";
+        pinyin = "GAI";
         break;
     case 5965:
     case 6053:
@@ -837,12 +957,12 @@ const char* getPinyinByCode(uint32_t code)
     case 7723:
     case 8065:
     case 8491:
-        return "GAN";
+        pinyin = "GAN";
         break;
     case 7716:
     case 7824:
     case 8364:
-        return "GANG";
+        pinyin = "GANG";
         break;
     case 5626:
     case 5830:
@@ -853,7 +973,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7334:
     case 7429:
     case 7915:
-        return "GAO";
+        pinyin = "GAO";
         break;
     case 5610:
     case 5678:
@@ -870,27 +990,27 @@ const char* getPinyinByCode(uint32_t code)
     case 8220:
     case 8420:
     case 8732:
-        return "GE";
+        pinyin = "GE";
         break;
-        return "GEI";
+        pinyin = "GEI";
         break;
     case 5608:
     case 6102:
     case 6371:
     case 8462:
-        return "GEN";
+        pinyin = "GEN";
         break;
     case 6376:
     case 6657:
     case 7114:
     case 8665:
-        return "GENG";
+        pinyin = "GENG";
         break;
     case 7178:
     case 7537:
     case 8228:
     case 8601:
-        return "GONG";
+        pinyin = "GONG";
         break;
     case 5694:
     case 5824:
@@ -904,7 +1024,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8349:
     case 8384:
     case 8724:
-        return "GOU";
+        pinyin = "GOU";
         break;
     case 5637:
     case 5812:
@@ -928,7 +1048,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8593:
     case 8681:
     case 8729:
-        return "GU";
+        pinyin = "GU";
         break;
     case 5652:
     case 5820:
@@ -936,9 +1056,9 @@ const char* getPinyinByCode(uint32_t code)
     case 7273:
     case 7550:
     case 8027:
-        return "GUA";
+        pinyin = "GUA";
         break;
-        return "GUAI";
+        pinyin = "GUAI";
         break;
     case 5736:
     case 6124:
@@ -948,13 +1068,13 @@ const char* getPinyinByCode(uint32_t code)
     case 8057:
     case 8170:
     case 8704:
-        return "GUAN";
+        pinyin = "GUAN";
         break;
     case 6359:
     case 6578:
     case 7270:
     case 7555:
-        return "GUANG";
+        pinyin = "GUANG";
         break;
     case 5648:
     case 5659:
@@ -967,13 +1087,13 @@ const char* getPinyinByCode(uint32_t code)
     case 8394:
     case 8657:
     case 8712:
-        return "GUI";
+        pinyin = "GUI";
         break;
     case 5782:
     case 7121:
     case 7762:
     case 8671:
-        return "GUN";
+        pinyin = "GUN";
         break;
     case 5769:
     case 6266:
@@ -986,15 +1106,15 @@ const char* getPinyinByCode(uint32_t code)
     case 8188:
     case 8268:
     case 8269:
-        return "GUO";
+        pinyin = "GUO";
         break;
     case 7894:
-        return "HA";
+        pinyin = "HA";
         break;
     case 6443:
     case 7560:
     case 8516:
-        return "HAI";
+        pinyin = "HAI";
         break;
     case 5885:
     case 6153:
@@ -1007,12 +1127,12 @@ const char* getPinyinByCode(uint32_t code)
     case 8205:
     case 8232:
     case 8793:
-        return "HAN";
+        pinyin = "HAN";
         break;
     case 6776:
     case 7112:
     case 8194:
-        return "HANG";
+        pinyin = "HANG";
         break;
     case 6179:
     case 6222:
@@ -1024,7 +1144,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8009:
     case 8211:
     case 8226:
-        return "HAO";
+        pinyin = "HAO";
         break;
     case 5813:
     case 5932:
@@ -1036,16 +1156,16 @@ const char* getPinyinByCode(uint32_t code)
     case 8202:
     case 8234:
     case 8471:
-        return "HE";
+        pinyin = "HE";
         break;
-        return "HEI";
+        pinyin = "HEI";
         break;
-        return "HEN";
+        pinyin = "HEN";
         break;
     case 6231:
     case 7181:
     case 7276:
-        return "HENG";
+        pinyin = "HENG";
         break;
     case 5768:
     case 5774:
@@ -1055,7 +1175,7 @@ const char* getPinyinByCode(uint32_t code)
     case 6216:
     case 6740:
     case 6792:
-        return "HONG";
+        pinyin = "HONG";
         break;
     case 6009:
     case 6565:
@@ -1065,7 +1185,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8455:
     case 8655:
     case 8731:
-        return "HOU";
+        pinyin = "HOU";
         break;
     case 5792:
     case 6392:
@@ -1092,16 +1212,16 @@ const char* getPinyinByCode(uint32_t code)
     case 8343:
     case 8513:
     case 8590:
-        return "HU";
+        pinyin = "HU";
         break;
     case 7072:
     case 7275:
     case 7725:
     case 7892:
-        return "HUA";
+        pinyin = "HUA";
         break;
     case 8555:
-        return "HUAI";
+        pinyin = "HUAI";
         break;
     case 5928:
     case 6140:
@@ -1117,7 +1237,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7944:
     case 8673:
     case 8763:
-        return "HUAN";
+        pinyin = "HUAN";
         break;
     case 5882:
     case 6569:
@@ -1130,7 +1250,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8308:
     case 8382:
     case 8692:
-        return "HUANG";
+        pinyin = "HUANG";
         break;
     case 5822:
     case 6078:
@@ -1150,13 +1270,13 @@ const char* getPinyinByCode(uint32_t code)
     case 8219:
     case 8319:
     case 8766:
-        return "HUI";
+        pinyin = "HUI";
         break;
     case 5827:
     case 6638:
     case 6752:
     case 6867:
-        return "HUN";
+        pinyin = "HUN";
         break;
     case 5669:
     case 6229:
@@ -1168,7 +1288,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7976:
     case 8175:
     case 8322:
-        return "HUO";
+        pinyin = "HUO";
         break;
     case 5629:
     case 5632:
@@ -1214,7 +1334,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8674:
     case 8757:
     case 8768:
-        return "JI";
+        pinyin = "JI";
         break;
     case 5704:
     case 5903:
@@ -1234,7 +1354,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8353:
     case 8434:
     case 8542:
-        return "JIA";
+        pinyin = "JIA";
         break;
     case 5752:
     case 5841:
@@ -1264,7 +1384,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8561:
     case 8668:
     case 8721:
-        return "JIAN";
+        pinyin = "JIAN";
         break;
     case 6092:
     case 6814:
@@ -1275,7 +1395,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8180:
     case 8461:
     case 8488:
-        return "JIANG";
+        pinyin = "JIANG";
         break;
     case 5714:
     case 5753:
@@ -1292,7 +1412,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8520:
     case 8551:
     case 8662:
-        return "JIAO";
+        pinyin = "JIAO";
         break;
     case 5806:
     case 5821:
@@ -1308,7 +1428,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8441:
     case 8658:
     case 8726:
-        return "JIE";
+        pinyin = "JIE";
         break;
     case 5865:
     case 6103:
@@ -1322,7 +1442,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7465:
     case 7478:
     case 8138:
-        return "JIN";
+        pinyin = "JIN";
         break;
     case 5751:
     case 5869:
@@ -1337,11 +1457,11 @@ const char* getPinyinByCode(uint32_t code)
     case 7554:
     case 7570:
     case 7626:
-        return "JIANG";
+        pinyin = "JIANG";
         break;
     case 6936:
     case 7671:
-        return "JIONG";
+        pinyin = "JIONG";
         break;
     case 5754:
     case 6417:
@@ -1352,7 +1472,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8053:
     case 8481:
     case 8761:
-        return "JIU";
+        pinyin = "JIU";
         break;
     case 5738:
     case 5810:
@@ -1381,7 +1501,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8620:
     case 8634:
     case 8722:
-        return "JU";
+        pinyin = "JU";
         break;
     case 5918:
     case 6590:
@@ -1391,7 +1511,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7935:
     case 7952:
     case 8633:
-        return "JUAN";
+        pinyin = "JUAN";
         break;
     case 5642:
     case 5667:
@@ -1411,18 +1531,18 @@ const char* getPinyinByCode(uint32_t code)
     case 7967:
     case 8574:
     case 8591:
-        return "JUE";
+        pinyin = "JUE";
         break;
     case 6260:
     case 8168:
     case 8362:
     case 8769:
-        return "JUN";
+        pinyin = "JUN";
         break;
     case 5671:
     case 6339:
     case 7544:
-        return "KA";
+        pinyin = "KA";
         break;
     case 5660:
     case 5978:
@@ -1432,25 +1552,25 @@ const char* getPinyinByCode(uint32_t code)
     case 7888:
     case 7920:
     case 7939:
-        return "KAI";
+        pinyin = "KAI";
         break;
     case 5709:
     case 6108:
     case 7412:
     case 7772:
     case 7811:
-        return "KAN";
+        pinyin = "KAN";
         break;
     case 5688:
     case 6742:
     case 7854:
-        return "KANG";
+        pinyin = "KANG";
         break;
     case 6974:
     case 7264:
     case 7491:
     case 7877:
-        return "KAO";
+        pinyin = "KAO";
         break;
     case 6430:
     case 6519:
@@ -1470,45 +1590,45 @@ const char* getPinyinByCode(uint32_t code)
     case 8204:
     case 8282:
     case 8733:
-        return "KE";
+        pinyin = "KE";
         break;
     case 8144:
-        return "KEN";
+        pinyin = "KEN";
         break;
     case 7912:
-        return "KENG";
+        pinyin = "KENG";
         break;
     case 5737:
     case 6539:
     case 8377:
-        return "KONG";
+        pinyin = "KONG";
         break;
     case 6050:
     case 6202:
     case 6321:
     case 7778:
     case 8356:
-        return "KOU";
+        pinyin = "KOU";
         break;
     case 5658:
     case 6005:
     case 6423:
     case 7111:
     case 8728:
-        return "KU";
+        pinyin = "KU";
         break;
     case 5708:
-        return "KUA";
+        pinyin = "KUA";
         break;
     case 5665:
     case 5906:
     case 6364:
     case 6586:
     case 7558:
-        return "KUAI";
+        pinyin = "KUAI";
         break;
     case 8737:
-        return "KUAN";
+        pinyin = "KUAN";
         break;
     case 5818:
     case 5831:
@@ -1518,7 +1638,7 @@ const char* getPinyinByCode(uint32_t code)
     case 6349:
     case 7094:
     case 7460:
-        return "KUANG";
+        pinyin = "KUANG";
         break;
     case 5624:
     case 5649:
@@ -1533,7 +1653,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7805:
     case 8606:
     case 8743:
-        return "KUI";
+        pinyin = "KUI";
         break;
     case 6204:
     case 6245:
@@ -1543,7 +1663,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7152:
     case 7841:
     case 8051:
-        return "LIAO";
+        pinyin = "LIAO";
         break;
     case 5793:
     case 5988:
@@ -1553,7 +1673,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8483:
     case 8581:
     case 8764:
-        return "LIE";
+        pinyin = "LIE";
         break;
     case 6194:
     case 6388:
@@ -1568,7 +1688,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8452:
     case 8579:
     case 8775:
-        return "LIN";
+        pinyin = "LIN";
         break;
     case 5925:
     case 6063:
@@ -1583,7 +1703,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8240:
     case 8465:
     case 8676:
-        return "LING";
+        pinyin = "LING";
         break;
     case 6815:
     case 6962:
@@ -1595,7 +1715,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7954:
     case 8050:
     case 8644:
-        return "LIU";
+        pinyin = "LIU";
         break;
     case 5966:
     case 6055:
@@ -1605,7 +1725,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7542:
     case 7735:
     case 8110:
-        return "LONG";
+        pinyin = "LONG";
         break;
     case 5745:
     case 6168:
@@ -1616,7 +1736,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8179:
     case 8287:
     case 8735:
-        return "LOU";
+        pinyin = "LOU";
         break;
     case 6744:
     case 7321:
@@ -1624,7 +1744,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7918:
     case 7989:
     case 8158:
-        return "Lü";
+        pinyin = "Lü";
         break;
     case 5968:
     case 6303:
@@ -1646,18 +1766,18 @@ const char* getPinyinByCode(uint32_t code)
     case 8392:
     case 8421:
     case 8652:
-        return "LU";
+        pinyin = "LU";
         break;
     case 5785:
     case 7014:
     case 7279:
     case 8029:
     case 8639:
-        return "LUAN";
+        pinyin = "LUAN";
         break;
-        return "LǖE";
+        pinyin = "LǖE";
         break;
-        return "LUN";
+        pinyin = "LUN";
         break;
     case 5732:
     case 5789:
@@ -1673,22 +1793,22 @@ const char* getPinyinByCode(uint32_t code)
     case 7961:
     case 8107:
     case 8635:
-        return "LUO";
+        pinyin = "LUO";
         break;
     case 6328:
-        return "M";
+        pinyin = "M";
         break;
     case 6373:
     case 6579:
     case 7054:
     case 7231:
     case 8301:
-        return "MA";
+        pinyin = "MA";
         break;
     case 5929:
     case 6104:
     case 8618:
-        return "MAI";
+        pinyin = "MAI";
         break;
     case 6012:
     case 6503:
@@ -1699,13 +1819,13 @@ const char* getPinyinByCode(uint32_t code)
     case 8293:
     case 8709:
     case 8720:
-        return "MAN";
+        pinyin = "MAN";
         break;
     case 5888:
     case 6861:
     case 7743:
     case 8294:
-        return "MANG";
+        pinyin = "MANG";
         break;
     case 5783:
     case 6066:
@@ -1720,7 +1840,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7806:
     case 8317:
     case 8754:
-        return "MAO";
+        pinyin = "MAO";
         break;
     case 6114:
     case 6550:
@@ -1732,13 +1852,13 @@ const char* getPinyinByCode(uint32_t code)
     case 8044:
     case 8139:
     case 8740:
-        return "MEI";
+        pinyin = "MEI";
         break;
     case 6249:
     case 7643:
     case 7715:
     case 7845:
-        return "MEN";
+        pinyin = "MEN";
         break;
     case 5934:
     case 6189:
@@ -1751,7 +1871,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8323:
     case 8427:
     case 8431:
-        return "MENG";
+        pinyin = "MENG";
         break;
     case 5634:
     case 5855:
@@ -1767,14 +1887,14 @@ const char* getPinyinByCode(uint32_t code)
     case 8445:
     case 8767:
     case 8771:
-        return "MI";
+        pinyin = "MI";
         break;
     case 6770:
     case 6837:
     case 6847:
     case 7579:
     case 7777:
-        return "MIAN";
+        pinyin = "MIAN";
         break;
     case 6387:
     case 6967:
@@ -1784,13 +1904,13 @@ const char* getPinyinByCode(uint32_t code)
     case 7721:
     case 7780:
     case 8037:
-        return "MIAO";
+        pinyin = "MIAO";
         break;
     case 5631:
     case 6367:
     case 8326:
     case 8390:
-        return "MIE";
+        pinyin = "MIE";
         break;
     case 6069:
     case 6526:
@@ -1802,7 +1922,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7710:
     case 8710:
     case 8628:
-        return "MIN";
+        pinyin = "MIN";
         break;
     case 5804:
     case 6088:
@@ -1810,9 +1930,9 @@ const char* getPinyinByCode(uint32_t code)
     case 7452:
     case 7808:
     case 8504:
-        return "MING";
+        pinyin = "MING";
         break;
-        return "MIU";
+        pinyin = "MIU";
         break;
     case 5851:
     case 6052:
@@ -1827,7 +1947,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8586:
     case 8588:
     case 8765:
-        return "MO";
+        pinyin = "MO";
         break;
     case 5716:
     case 6372:
@@ -1835,7 +1955,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8254:
     case 8290:
     case 8642:
-        return "MOU";
+        pinyin = "MOU";
         break;
     case 5679:
     case 5973:
@@ -1843,22 +1963,22 @@ const char* getPinyinByCode(uint32_t code)
     case 6769:
     case 7504:
     case 7866:
-        return "MU";
+        pinyin = "MU";
         break;
     case 6437:
-        return "N";
+        pinyin = "N";
         break;
     case 6264:
     case 7539:
     case 7953:
     case 8136:
-        return "NA";
+        pinyin = "NA";
         break;
     case 5630:
     case 6021:
     case 6133:
     case 7245:
-        return "NAI";
+        pinyin = "NAI";
         break;
     case 6411:
     case 6478:
@@ -1867,13 +1987,13 @@ const char* getPinyinByCode(uint32_t code)
     case 7578:
     case 8279:
     case 8486:
-        return "NAN";
+        pinyin = "NAN";
         break;
     case 6313:
     case 6476:
     case 6646:
     case 7457:
-        return "NANG";
+        pinyin = "NANG";
         break;
     case 5611:
     case 5981:
@@ -1883,17 +2003,17 @@ const char* getPinyinByCode(uint32_t code)
     case 7748:
     case 7883:
     case 8245:
-        return "NAO";
+        pinyin = "NAO";
         break;
     case 5811:
-        return "NE";
+        pinyin = "NE";
         break;
-        return "NEI";
+        pinyin = "NEI";
         break;
     case 7705:
-        return "NEN";
+        pinyin = "NEN";
         break;
-        return "NENG";
+        pinyin = "NENG";
         break;
     case 5703:
     case 5972:
@@ -1905,7 +2025,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7794:
     case 7874:
     case 8682:
-        return "NI";
+        pinyin = "NI";
         break;
     case 5605:
     case 5994:
@@ -1913,15 +2033,15 @@ const char* getPinyinByCode(uint32_t code)
     case 8004:
     case 8651:
     case 8683:
-        return "NIAN";
+        pinyin = "NIAN";
         break;
-        return "NIANG";
+        pinyin = "NIANG";
         break;
     case 6064:
     case 7053:
     case 7569:
     case 8433:
-        return "NIAO";
+        pinyin = "NIAO";
         break;
     case 5877:
     case 6233:
@@ -1929,68 +2049,68 @@ const char* getPinyinByCode(uint32_t code)
     case 8208:
     case 8411:
     case 8570:
-        return "NIE";
+        pinyin = "NIE";
         break;
-        return "NIN";
+        pinyin = "NIN";
         break;
     case 5690:
     case 6344:
     case 6924:
     case 8187:
-        return "NING";
+        pinyin = "NING";
         break;
     case 6580:
     case 6678:
     case 7004:
-        return "NIU";
+        pinyin = "NIU";
         break;
     case 5715:
     case 6370:
-        return "NONG";
+        pinyin = "NONG";
         break;
     case 8181:
-        return "NOU";
+        pinyin = "NOU";
         break;
     case 6983:
     case 7032:
     case 7059:
     case 7069:
-        return "NU";
+        pinyin = "NU";
         break;
     case 7704:
     case 7847:
     case 8412:
-        return "Nǖ";
+        pinyin = "Nǖ";
         break;
-        return "NUAN";
+        pinyin = "NUAN";
         break;
-        return "NUE";
+        pinyin = "NUE";
         break;
     case 5748:
     case 6289:
     case 6386:
     case 7927:
-        return "NUO";
+        pinyin = "NUO";
         break;
     case 6424:
     case 6462:
-        return "O";
+        pinyin = "O";
         break;
     case 5809:
     case 6670:
     case 7417:
     case 8178:
-        return "OU";
+        pinyin = "OU";
         break;
     case 6166:
     case 7243:
     case 8365:
-        return "PA";
+        pinyin = "PA";
         break;
     case 5729:
     case 6169:
     case 6363:
-        return "PAI";
+        pinyin = "PAI";
         break;
     case 6761:
     case 6790:
@@ -1998,20 +2118,20 @@ const char* getPinyinByCode(uint32_t code)
     case 8165:
     case 8320:
     case 8571:
-        return "PAN";
+        pinyin = "PAN";
         break;
     case 6561:
     case 6872:
     case 6944:
     case 8306:
-        return "PANG";
+        pinyin = "PANG";
         break;
     case 6243:
     case 6583:
     case 6650:
     case 7567:
     case 8069:
-        return "PAO";
+        pinyin = "PAO";
         break;
     case 6446:
     case 6490:
@@ -2019,16 +2139,16 @@ const char* getPinyinByCode(uint32_t code)
     case 7934:
     case 8512:
     case 8612:
-        return "PEI";
+        pinyin = "PEI";
         break;
     case 6852:
-        return "PEN";
+        pinyin = "PEN";
         break;
     case 6001:
     case 6456:
     case 6681:
     case 8318:
-        return "PENG";
+        pinyin = "PENG";
         break;
     case 5607:
     case 5682:
@@ -2054,7 +2174,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8223:
     case 8271:
     case 8589:
-        return "PI";
+        pinyin = "PI";
         break;
     case 5850:
     case 7073:
@@ -2062,7 +2182,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7561:
     case 8470:
     case 8568:
-        return "PIAN";
+        pinyin = "PIAN";
         break;
     case 5666:
     case 6449:
@@ -2071,11 +2191,11 @@ const char* getPinyinByCode(uint32_t code)
     case 7372:
     case 7809:
     case 8310:
-        return "PIAO";
+        pinyin = "PIAO";
         break;
     case 6054:
     case 7513:
-        return "PIE";
+        pinyin = "PIE";
         break;
     case 7041:
     case 6253:
@@ -2083,13 +2203,13 @@ const char* getPinyinByCode(uint32_t code)
     case 7315:
     case 7482:
     case 8213:
-        return "PIN";
+        pinyin = "PIN";
         break;
     case 5723:
     case 7019:
     case 7250:
     case 8650:
-        return "PING";
+        pinyin = "PING";
         break;
     case 5647:
     case 5922:
@@ -2098,11 +2218,11 @@ const char* getPinyinByCode(uint32_t code)
     case 7862:
     case 8011:
     case 8345:
-        return "PO";
+        pinyin = "PO";
         break;
     case 5786:
     case 6269:
-        return "POU";
+        pinyin = "POU";
         break;
     case 5773:
     case 6459:
@@ -2113,7 +2233,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7968:
     case 7972:
     case 8575:
-        return "PU";
+        pinyin = "PU";
         break;
     case 5633:
     case 5725:
@@ -2151,11 +2271,11 @@ const char* getPinyinByCode(uint32_t code)
     case 8572:
     case 8702:
     case 8772:
-        return "QI";
+        pinyin = "QI";
         break;
     case 6154:
     case 8736:
-        return "QIA";
+        pinyin = "QIA";
         break;
     case 5727:
     case 5761:
@@ -2177,7 +2297,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7852:
     case 8215:
     case 8373:
-        return "QIAN";
+        pinyin = "QIAN";
         break;
     case 6762:
     case 7045:
@@ -2191,7 +2311,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8262:
     case 8439:
     case 8536:
-        return "QIANG";
+        pinyin = "QIANG";
         break;
     case 5668:
     case 5829:
@@ -2204,7 +2324,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7745:
     case 8546:
     case 8719:
-        return "QIAO";
+        pinyin = "QIAO";
         break;
     case 5907:
     case 6711:
@@ -2212,7 +2332,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7492:
     case 7938:
     case 8370:
-        return "QIE";
+        pinyin = "QIE";
         break;
     case 6043:
     case 6276:
@@ -2224,7 +2344,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7923:
     case 8291:
     case 8432:
-        return "QIN";
+        pinyin = "QIN";
         break;
     case 6060:
     case 6485:
@@ -2236,7 +2356,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8605:
     case 8675:
     case 8784:
-        return "QING";
+        pinyin = "QING";
         break;
     case 5886:
     case 6068:
@@ -2245,7 +2365,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8344:
     case 8528:
     case 8638:
-        return "QIONG";
+        pinyin = "QIONG";
         break;
     case 5720:
     case 5947:
@@ -2262,7 +2382,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8460:
     case 8690:
     case 8792:
-        return "QIU";
+        pinyin = "QIU";
         break;
     case 5816:
     case 5930:
@@ -2283,7 +2403,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8480:
     case 8636:
     case 8781:
-        return "QU";
+        pinyin = "QU";
         break;
     case 5825:
     case 6085:
@@ -2295,31 +2415,31 @@ const char* getPinyinByCode(uint32_t code)
     case 8273:
     case 8360:
     case 8760:
-        return "QUAN";
+        pinyin = "QUAN";
         break;
     case 6755:
     case 6758:
     case 7708:
-        return "QUE";
+        pinyin = "QUE";
         break;
     case 6950:
-        return "QUN";
+        pinyin = "QUN";
         break;
     case 6059:
     case 8237:
     case 8755:
-        return "RAN";
+        pinyin = "RAN";
         break;
     case 7692:
     case 8006:
-        return "RANG";
+        pinyin = "RANG";
         break;
     case 6073:
     case 7012:
     case 7267:
-        return "RAO";
+        pinyin = "RAO";
         break;
-        return "RE";
+        pinyin = "RE";
         break;
     case 5680:
     case 6083:
@@ -2328,23 +2448,23 @@ const char* getPinyinByCode(uint32_t code)
     case 7377:
     case 7994:
     case 8137:
-        return "REN";
+        pinyin = "REN";
         break;
-        return "RENG";
+        pinyin = "RENG";
         break;
-        return "RI";
+        pinyin = "RI";
         break;
     case 6541:
     case 6585:
     case 7337:
     case 7532:
     case 8278:
-        return "RONG";
+        pinyin = "RONG";
         break;
     case 8459:
     case 8569:
     case 8723:
-        return "ROU";
+        pinyin = "ROU";
         break;
     case 6174:
     case 6224:
@@ -2356,43 +2476,43 @@ const char* getPinyinByCode(uint32_t code)
     case 7908:
     case 8164:
     case 8212:
-        return "RU";
+        pinyin = "RU";
         break;
     case 7535:
-        return "RUAN";
+        pinyin = "RUAN";
         break;
     case 6039:
     case 6208:
     case 7236:
     case 7803:
     case 8224:
-        return "RUI";
+        pinyin = "RUI";
         break;
-        return "RUN";
+        pinyin = "RUN";
         break;
     case 5728:
     case 8372:
-        return "RUO";
+        pinyin = "RUO";
         break;
     case 5606:
     case 5677:
     case 7493:
     case 7559:
     case 7610:
-        return "SA";
+        pinyin = "SA";
         break;
     case 6471:
-        return "SAI";
+        pinyin = "SAI";
         break;
     case 6644:
     case 7507:
     case 8454:
-        return "SAN";
+        pinyin = "SAN";
         break;
     case 6290:
     case 7763:
     case 8210:
-        return "SANG";
+        pinyin = "SANG";
         break;
     case 6003:
     case 7150:
@@ -2400,13 +2520,13 @@ const char* getPinyinByCode(uint32_t code)
     case 7593:
     case 8094:
     case 8694:
-        return "SAO";
+        pinyin = "SAO";
         break;
-        return "SE";
+        pinyin = "SE";
         break;
-        return "SEN";
+        pinyin = "SEN";
         break;
-        return "SENG";
+        pinyin = "SENG";
         break;
     case 6394:
     case 7606:
@@ -2415,10 +2535,10 @@ const char* getPinyinByCode(uint32_t code)
     case 8436:
     case 8614:
     case 8672:
-        return "SHA";
+        pinyin = "SHA";
         break;
     case 8507:
-        return "SHAI";
+        pinyin = "SHAI";
         break;
     case 5663:
     case 5808:
@@ -2436,14 +2556,14 @@ const char* getPinyinByCode(uint32_t code)
     case 8414:
     case 8539:
     case 8713:
-        return "SHAN";
+        pinyin = "SHAN";
         break;
     case 5980:
     case 7120:
     case 7368:
     case 7656:
     case 8592:
-        return "SHANG";
+        pinyin = "SHANG";
         break;
     case 5931:
     case 6070:
@@ -2451,7 +2571,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7228:
     case 8366:
     case 8425:
-        return "SHAO";
+        pinyin = "SHAO";
         break;
     case 5639:
     case 5760:
@@ -2460,7 +2580,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7608:
     case 7820:
     case 8774:
-        return "SHE";
+        pinyin = "SHE";
         break;
     case 5837:
     case 6123:
@@ -2470,13 +2590,13 @@ const char* getPinyinByCode(uint32_t code)
     case 7547:
     case 7982:
     case 8255:
-        return "SHEN";
+        pinyin = "SHEN";
         break;
     case 6551:
     case 7441:
     case 7782:
     case 8347:
-        return "SHENG";
+        pinyin = "SHENG";
         break;
     case 5854:
     case 5985:
@@ -2493,12 +2613,12 @@ const char* getPinyinByCode(uint32_t code)
     case 8525:
     case 8669:
     case 8685:
-        return "SHI";
+        pinyin = "SHI";
         break;
     case 6587:
     case 7123:
     case 8428:
-        return "SHOU";
+        pinyin = "SHOU";
         break;
     case 5731:
     case 5951:
@@ -2510,31 +2630,31 @@ const char* getPinyinByCode(uint32_t code)
     case 7508:
     case 7582:
     case 7988:
-        return "SHU";
+        pinyin = "SHU";
         break;
     case 6407:
-        return "SHUA";
+        pinyin = "SHUA";
         break;
     case 8316:
-        return "SHUAI";
+        pinyin = "SHUAI";
         break;
     case 6737:
     case 6844:
-        return "SHUAN";
+        pinyin = "SHUAN";
         break;
     case 7055:
-        return "SHUANG";
+        pinyin = "SHUANG";
         break;
-        return "SHUI";
+        pinyin = "SHUI";
         break;
-        return "SHUN";
+        pinyin = "SHUN";
         break;
     case 6184:
     case 6287:
     case 6989:
     case 7335:
     case 7869:
-        return "SHUO";
+        pinyin = "SHUO";
         break;
     case 5643:
     case 5778:
@@ -2552,7 +2672,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8174:
     case 8247:
     case 8351:
-        return "SI";
+        pinyin = "SI";
         break;
     case 5801:
     case 6131:
@@ -2562,7 +2682,7 @@ const char* getPinyinByCode(uint32_t code)
     case 6704:
     case 6833:
     case 8121:
-        return "SONG";
+        pinyin = "SONG";
         break;
     case 5937:
     case 6220:
@@ -2574,7 +2694,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7804:
     case 7943:
     case 8284:
-        return "SOU";
+        pinyin = "SOU";
         break;
     case 5777:
     case 5853:
@@ -2585,10 +2705,10 @@ const char* getPinyinByCode(uint32_t code)
     case 8389:
     case 8602:
     case 8653:
-        return "SU";
+        pinyin = "SU";
         break;
     case 6601:
-        return "SUAN";
+        pinyin = "SUAN";
         break;
     case 5839:
     case 6120:
@@ -2597,14 +2717,14 @@ const char* getPinyinByCode(uint32_t code)
     case 7661:
     case 7785:
     case 7801:
-        return "SUI";
+        pinyin = "SUI";
         break;
     case 6105:
     case 6588:
     case 6624:
     case 7330:
     case 8632:
-        return "SUN";
+        pinyin = "SUN";
         break;
     case 6379:
     case 6434:
@@ -2613,7 +2733,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7288:
     case 7792:
     case 8440:
-        return "SUO";
+        pinyin = "SUO";
         break;
     case 6743:
     case 6866:
@@ -2623,7 +2743,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7872:
     case 8533:
     case 8703:
-        return "TA";
+        pinyin = "TA";
         break;
     case 5902:
     case 6223:
@@ -2634,7 +2754,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7849:
     case 8544:
     case 8656:
-        return "TAI";
+        pinyin = "TAI";
         break;
     case 5916:
     case 6903:
@@ -2643,7 +2763,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7867:
     case 7936:
     case 8191:
-        return "TAN";
+        pinyin = "TAN";
         break;
     case 5746:
     case 6491:
@@ -2657,24 +2777,24 @@ const char* getPinyinByCode(uint32_t code)
     case 8311:
     case 8442:
     case 8517:
-        return "TANG";
+        pinyin = "TANG";
         break;
     case 5627:
     case 6391:
     case 6812:
     case 7226:
     case 7666:
-        return "TAO";
+        pinyin = "TAO";
         break;
-        //return "1845 餐";
+        //pinyin = "1845 餐";
         //break;
     case 6315:
     case 7693:
     case 7911:
-        return "TE";
+        pinyin = "TE";
         break;
     case 7588:
-        return "TENG";
+        pinyin = "TENG";
         break;
     case 5735:
     case 6709:
@@ -2683,14 +2803,14 @@ const char* getPinyinByCode(uint32_t code)
     case 8035:
     case 8151:
     case 8514:
-        return "TI";
+        pinyin = "TI";
         break;
     case 6261:
     case 6735:
     case 6757:
     case 7369:
     case 7817:
-        return "TIAN";
+        pinyin = "TIAN";
         break;
     case 5712:
     case 7686:
@@ -2701,11 +2821,11 @@ const char* getPinyinByCode(uint32_t code)
     case 8622:
     case 8670:
     case 8756:
-        return "TIAO";
+        pinyin = "TIAO";
         break;
     case 6138:
     case 8749:
-        return "TIE";
+        pinyin = "TIE";
         break;
     case 6080:
     case 6167:
@@ -2714,7 +2834,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7890:
     case 8249:
     case 8610:
-        return "TING";
+        pinyin = "TING";
         break;
     case 5701:
     case 5758:
@@ -2723,32 +2843,32 @@ const char* getPinyinByCode(uint32_t code)
     case 6690:
     case 6892:
     case 7737:
-        return "TONG";
+        pinyin = "TONG";
         break;
     case 7855:
     case 7822:
     case 8727:
-        return "TOU";
+        pinyin = "TOU";
         break;
     case 6002:
     case 6117:
     case 6143:
     case 7842:
     case 8509:
-        return "TU";
+        pinyin = "TU";
         break;
     case 6250:
     case 6972:
-        return "TUAN";
+        pinyin = "TUAN";
         break;
     case 7653:
-        return "TUI";
+        pinyin = "TUI";
         break;
     case 5759:
     case 6629:
     case 7453:
     case 7564:
-        return "TUN";
+        pinyin = "TUN";
         break;
     case 5617:
     case 5702:
@@ -2763,14 +2883,14 @@ const char* getPinyinByCode(uint32_t code)
     case 8502:
     case 8541:
     case 8630:
-        return "TUO";
+        pinyin = "TUO";
         break;
     case 5684:
     case 7020:
     case 7580:
-        return "WA";
+        pinyin = "WA";
         break;
-        return "WAI";
+        pinyin = "WAI";
         break;
     case 5664:
     case 6025:
@@ -2781,14 +2901,14 @@ const char* getPinyinByCode(uint32_t code)
     case 7568:
     case 7821:
     case 8274:
-        return "WAN";
+        pinyin = "WAN";
         break;
     case 5672:
     case 6244:
     case 6715:
     case 7394:
     case 8745:
-        return "WANG";
+        pinyin = "WANG";
         break;
     case 5743:
     case 5835:
@@ -2816,18 +2936,18 @@ const char* getPinyinByCode(uint32_t code)
     case 8084:
     case 8426:
     case 8659:
-        return "WEI";
+        pinyin = "WEI";
         break;
     case 5656:
     case 6751:
     case 6775:
     case 7223:
     case 8609:
-        return "WEN";
+        pinyin = "WEN";
         break;
     case 6178:
     case 6219:
-        return "WENG";
+        pinyin = "WENG";
         break;
     case 5733:
     case 6111:
@@ -2836,7 +2956,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7531:
     case 7750:
     case 8627:
-        return "WO";
+        pinyin = "WO";
         break;
     case 5603:
     case 5685:
@@ -2863,7 +2983,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8258:
     case 8640:
     case 8789:
-        return "WU";
+        pinyin = "WU";
         break;
     case 5750:
     case 5766:
@@ -2901,7 +3021,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8466:
     case 8521:
     case 8791:
-        return "XI";
+        pinyin = "XI";
         break;
     case 6340:
     case 6582:
@@ -2912,7 +3032,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8093:
     case 8333:
     case 8779:
-        return "XIA";
+        pinyin = "XIA";
         break;
     case 5794:
     case 5823:
@@ -2935,7 +3055,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8548:
     case 8549:
     case 8617:
-        return "XIAN";
+        pinyin = "XIAN";
         break;
     case 6028:
     case 6157:
@@ -2946,7 +3066,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8313:
     case 8663:
     case 8747:
-        return "XIANG";
+        pinyin = "XIANG";
         break;
     case 6356:
     case 6537:
@@ -2960,7 +3080,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8367:
     case 8379:
     case 8744:
-        return "XIAO";
+        pinyin = "XIAO";
         break;
     case 5741:
     case 5784:
@@ -2978,24 +3098,24 @@ const char* getPinyinByCode(uint32_t code)
     case 7331:
     case 7339:
     case 8583:
-        return "XIE";
+        pinyin = "XIE";
         break;
     case 5622:
     case 6016:
     case 7431:
     case 7607:
     case 8646:
-        return "XIN";
+        pinyin = "XIN";
         break;
     case 5874:
     case 6084:
     case 6309:
     case 6712:
     case 7742:
-        return "XING";
+        pinyin = "XING";
         break;
     case 6026:
-        return "XIONG";
+        pinyin = "XIONG";
         break;
     case 6361:
     case 6522:
@@ -3005,7 +3125,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8028:
     case 8587:
     case 8759:
-        return "XIU";
+        pinyin = "XIU";
         break;
     case 5828:
     case 5935:
@@ -3020,7 +3140,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8167:
     case 8458:
     case 8515:
-        return "XU";
+        pinyin = "XU";
         break;
     case 5756:
     case 5846:
@@ -3038,13 +3158,13 @@ const char* getPinyinByCode(uint32_t code)
     case 7871:
     case 7964:
     case 8071:
-        return "XUAN";
+        pinyin = "XUAN";
         break;
     case 5842:
     case 7720:
     case 8529:
     case 8708:
-        return "XUE";
+        pinyin = "XUE";
         break;
     case 5767:
     case 5908:
@@ -3063,7 +3183,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8131:
     case 8524:
     case 8664:
-        return "XUN";
+        pinyin = "XUN";
         break;
     case 5683:
     case 5975:
@@ -3077,7 +3197,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7728:
     case 7793:
     case 8073:
-        return "YA";
+        pinyin = "YA";
         break;
     case 5641:
     case 5645:
@@ -3108,7 +3228,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8742:
     case 8748:
     case 8790:
-        return "YAN";
+        pinyin = "YAN";
         break;
     case 6564:
     case 6683:
@@ -3117,7 +3237,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7706:
     case 8253:
     case 8717:
-        return "YANG";
+        pinyin = "YANG";
         break;
     case 5618:
     case 5619:
@@ -3135,7 +3255,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8126:
     case 8477:
     case 8705:
-        return "YAO";
+        pinyin = "YAO";
         break;
     case 5644:
     case 5843:
@@ -3144,7 +3264,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7442:
     case 7639:
     case 7884:
-        return "YE";
+        pinyin = "YE";
         break;
     case 5655:
     case 5657:
@@ -3197,7 +3317,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8472:
     case 8493:
     case 8780:
-        return "YI";
+        pinyin = "YI";
         break;
     case 5623:
     case 5920:
@@ -3215,7 +3335,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8230:
     case 8615:
     case 8624:
-        return "YIN";
+        pinyin = "YIN";
         break;
     case 5788:
     case 5911:
@@ -3238,10 +3358,10 @@ const char* getPinyinByCode(uint32_t code)
     case 8108:
     case 8203:
     case 8331:
-        return "YING";
+        pinyin = "YING";
         break;
     case 6401:
-        return "YO";
+        pinyin = "YO";
         break;
     case 5724:
     case 5953:
@@ -3253,7 +3373,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8014:
     case 8711:
     case 8751:
-        return "YONG";
+        pinyin = "YONG";
         break;
     case 5653:
     case 5692:
@@ -3275,7 +3395,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8647:
     case 8778:
     case 8788:
-        return "YOU";
+        pinyin = "YOU";
         break;
     case 5614:
     case 5625:
@@ -3321,7 +3441,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8408:
     case 8607:
     case 8625:
-        return "YU";
+        pinyin = "YU";
         break;
     case 5989:
     case 6011:
@@ -3336,14 +3456,14 @@ const char* getPinyinByCode(uint32_t code)
     case 8302:
     case 8378:
     case 8629:
-        return "YUAN";
+        pinyin = "YUAN";
         break;
     case 5763:
     case 6914:
     case 7348:
     case 7530:
     case 7865:
-        return "YUE";
+        pinyin = "YUE";
         break;
     case 5909:
     case 6031:
@@ -3356,15 +3476,15 @@ const char* getPinyinByCode(uint32_t code)
     case 7432:
     case 7521:
     case 7657:
-        return "YUN";
+        pinyin = "YUN";
         break;
     case 6257:
     case 6338:
-        return "ZA";
+        pinyin = "ZA";
         break;
     case 6544:
     case 7162:
-        return "ZAI";
+        pinyin = "ZAI";
         break;
     case 7222:
     case 7435:
@@ -3372,15 +3492,15 @@ const char* getPinyinByCode(uint32_t code)
     case 8456:
     case 8485:
     case 8641:
-        return "ZAN";
+        pinyin = "ZAN";
         break;
     case 6242:
     case 7064:
     case 7416:
-        return "ZANG";
+        pinyin = "ZANG";
         break;
     case 6380:
-        return "ZAO";
+        pinyin = "ZAO";
         break;
     case 5638:
     case 8369:
@@ -3391,18 +3511,18 @@ const char* getPinyinByCode(uint32_t code)
     case 7430:
     case 8348:
     case 8423:
-        return "ZE";
+        pinyin = "ZE";
         break;
-        return "ZEI";
+        pinyin = "ZEI";
         break;
     case 5858:
-        return "ZEN";
+        pinyin = "ZEN";
         break;
     case 7153:
     case 7421:
     case 7832:
     case 7913:
-        return "ZENG";
+        pinyin = "ZENG";
         break;
     case 6610:
     case 6274:
@@ -3413,16 +3533,16 @@ const char* getPinyinByCode(uint32_t code)
     case 8068:
     case 8238:
     case 8794:
-        return "ZHA";
+        pinyin = "ZHA";
         break;
     case 7746:
     case 8109:
-        return "ZHAI";
+        pinyin = "ZHAI";
         break;
     case 5862:
     case 6288:
     case 7625:
-        return "ZHAN";
+        pinyin = "ZHAN";
         break;
     case 5675:
     case 5921:
@@ -3432,13 +3552,13 @@ const char* getPinyinByCode(uint32_t code)
     case 7049:
     case 7216:
     case 8315:
-        return "ZHANG";
+        pinyin = "ZHANG";
         break;
     case 5815:
     case 7294:
     case 7840:
     case 8341:
-        return "ZHAO";
+        pinyin = "ZHAO";
         break;
     case 5856:
     case 6301:
@@ -3449,7 +3569,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8162:
     case 8256:
     case 8487:
-        return "ZHE";
+        pinyin = "ZHE";
         break;
     case 5958:
     case 6172:
@@ -3466,7 +3586,7 @@ const char* getPinyinByCode(uint32_t code)
     case 8001:
     case 8018:
     case 8380:
-        return "ZHEN";
+        pinyin = "ZHEN";
         break;
     case 5826:
     case 6531:
@@ -3474,7 +3594,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7859:
     case 7903:
     case 8361:
-        return "ZHENG";
+        pinyin = "ZHENG";
         break;
     case 5620:
     case 5876:
@@ -3510,14 +3630,14 @@ const char* getPinyinByCode(uint32_t code)
     case 8560:
     case 8584:
     case 8603:
-        return "ZHI";
+        pinyin = "ZHI";
         break;
     case 5803:
     case 7981:
     case 8314:
     case 8417:
     case 8564:
-        return "ZHONG";
+        pinyin = "ZHONG";
         break;
     case 6107:
     case 6390:
@@ -3528,7 +3648,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7756:
     case 8406:
     case 8492:
-        return "ZHOU";
+        pinyin = "ZHOU";
         break;
     case 5689:
     case 5710:
@@ -3551,28 +3671,28 @@ const char* getPinyinByCode(uint32_t code)
     case 8467:
     case 8578:
     case 8770:
-        return "ZHU";
+        pinyin = "ZHU";
         break;
-        return "ZHUA";
+        pinyin = "ZHUA";
         break;
-        return "ZHUAI";
+        pinyin = "ZHUAI";
         break;
     case 6389:
     case 6645:
     case 8207:
-        return "ZHUAN";
+        pinyin = "ZHUAN";
         break;
     case 5755:
-        return "ZHUANG";
+        pinyin = "ZHUANG";
         break;
     case 6723:
     case 7077:
     case 7136:
-        return "ZHUI";
+        pinyin = "ZHUI";
         break;
     case 7538:
     case 8124:
-        return "ZHUN";
+        pinyin = "ZHUN";
         break;
     case 5730:
     case 5834:
@@ -3584,7 +3704,7 @@ const char* getPinyinByCode(uint32_t code)
     case 7690:
     case 7729:
     case 7977:
-        return "ZHUO";
+        pinyin = "ZHUO";
         break;
     case 5849:
     case 6549:
@@ -3607,37 +3727,37 @@ const char* getPinyinByCode(uint32_t code)
     case 8623:
     case 8686:
     case 8758:
-        return "ZI";
+        pinyin = "ZI";
         break;
     case 5744:
     case 7574:
     case 8453:
-        return "ZONG";
+        pinyin = "ZONG";
         break;
     case 5833:
     case 5878:
     case 5924:
     case 7067:
     case 8677:
-        return "ZOU";
+        pinyin = "ZOU";
         break;
     case 5762:
     case 6147:
     case 7963:
-        return "ZU";
+        pinyin = "ZU";
         break;
     case 6312:
     case 7158:
     case 8582:
-        return "ZUAN";
+        pinyin = "ZUAN";
         break;
     case 6209:
-        return "ZUI";
+        pinyin = "ZUI";
         break;
     case 6304:
     case 7355:
     case 8714:
-        return "ZUN";
+        pinyin = "ZUN";
         break;
     case 5872:
     case 6382:
@@ -3645,1980 +3765,1984 @@ const char* getPinyinByCode(uint32_t code)
     case 6684:
     case 7549:
     case 7681:
-        return "ZUO";
+        pinyin = "ZUO";
         break;
     default:
         if (code >= 1601 && code <= 1602)
         {
-            return "A";
+            pinyin = "A";
             break;
         }
         if (code >= 1603 && code <= 1615)
         {
-            return "AI";
+            pinyin = "AI";
             break;
         }
         if (code >= 1616 && code <= 1624)
         {
-            return "AN";
+            pinyin = "AN";
             break;
         }
         if (code >= 1625 && code <= 1627)
         {
-            return "ANG";
+            pinyin = "ANG";
             break;
         }
         if (code >= 1628 && code <= 1636)
         {
-            return "AO";
+            pinyin = "AO";
             break;
         }
         if (code >= 1637 && code <= 1654)
         {
-            return "BA";
+            pinyin = "BA";
             break;
         }
         if (code >= 1655 && code <= 1662)
         {
-            return "BAI";
+            pinyin = "BAI";
             break;
         }
         if (code >= 1663 && code <= 1677)
         {
-            return "BAN";
+            pinyin = "BAN";
             break;
         }
         if (code >= 1678 && code <= 1689)
         {
-            return "BANG";
+            pinyin = "BANG";
             break;
         }
         if (code >= 1690 && code <= 1712)
         {
-            return "BAO";
+            pinyin = "BAO";
             break;
         }
         if (code >= 1713 && code <= 1727)
         {
-            return "BEI";
+            pinyin = "BEI";
             break;
         }
         if (code >= 1728 && code <= 1731)
         {
-            return "BEN";
+            pinyin = "BEN";
             break;
         }
         if (code >= 1732 && code <= 1737)
         {
-            return "BENG";
+            pinyin = "BENG";
             break;
         }
         if (code > 1738 && code <= 1761)
         {
-            return "BI";
+            pinyin = "BI";
             break;
         }
         if (code >= 1762 && code <= 1773)
         {
-            return "BIAN";
+            pinyin = "BIAN";
             break;
         }
         if (code >= 1774 && code <= 1777)
         {
-            return "BIAO";
+            pinyin = "BIAO";
             break;
         }
         if (code >= 1778 && code <= 1781)
         {
-            return "BIE";
+            pinyin = "BIE";
             break;
         }
         if (code >= 1782 && code <= 1787)
         {
-            return "BIN";
+            pinyin = "BIN";
             break;
         }
         if (code >= 1788 && code <= 1794)
         {
-            return "BING";
+            pinyin = "BING";
             break;
         }
         if (code >= 1801 && code <= 1802)
         {
-            return "BING";
+            pinyin = "BING";
             break;
         }
         if (code >= 1803 && code <= 1821)
         {
-            return "BO";
+            pinyin = "BO";
             break;
         }
         if (code >= 1822 && code <= 1832)
         {
-            return "BU";
+            pinyin = "BU";
             break;
         }
         if (code == 1833)
         {
-            return "CA";
+            pinyin = "CA";
             break;
         }
         if (code >= 1834 && code <= 1844)
         {
-            return "CAI";
+            pinyin = "CAI";
             break;
         }
         if (code >= 1845 && code <= 1851)
         {
-            return "CAN";
+            pinyin = "CAN";
             break;
         }
         if (code >= 1852 && code <= 1856)
         {
-            return "CANG";
+            pinyin = "CANG";
             break;
         }
         if (code >= 1857 && code <= 1861)
         {
-            return "CAO";
+            pinyin = "CAO";
             break;
         }
         if (code >= 1862 && code <= 1866)
         {
-            return "CE";
+            pinyin = "CE";
             break;
         }
         if (code >= 1867 && code <= 1868)
         {
-            return "CENG";
+            pinyin = "CENG";
             break;
         }
         if (code >= 1869 && code <= 1879)
         {
-            return "CHA";
+            pinyin = "CHA";
             break;
         }
         if (code >= 1880 && code <= 1882)
         {
-            return "CHAI";
+            pinyin = "CHAI";
             break;
         }
         if (code >= 1883 && code <= 1892)
         {
-            return "CHAN";
+            pinyin = "CHAN";
             break;
         }
         if (code >= 1893 && code <= 1911)
         {
-            return "CHANG";
+            pinyin = "CHANG";
             break;
         }
         if (code >= 1912 && code <= 1920)
         {
-            return "CHAO";
+            pinyin = "CHAO";
             break;
         }
         if (code >= 1921 && code <= 1926)
         {
-            return "CHE";
+            pinyin = "CHE";
             break;
         }
         if (code >= 1927 && code <= 1936)
         {
-            return "CHEN";
+            pinyin = "CHEN";
             break;
         }
         if (code >= 1937 && code <= 1951)
         {
-            return "CHENG";
+            pinyin = "CHENG";
             break;
         }
         if (code >= 1952 && code <= 1967)
         {
-            return "CHI";
+            pinyin = "CHI";
             break;
         }
         if (code >= 1968 && code <= 1972)
         {
-            return "CHONG";
+            pinyin = "CHONG";
             break;
         }
         if (code >= 1973 && code <= 1984)
         {
-            return "CHOU";
+            pinyin = "CHOU";
             break;
         }
         if (code >= 1985 && code <= 2006)
         {
-            return "CHU";
+            pinyin = "CHU";
             break;
         }
         if (code == 2007)
         {
-            return "CHUAI";
+            pinyin = "CHUAI";
             break;
         }
         if (code >= 2008 && code <= 2014)
         {
-            return "CHUAN";
+            pinyin = "CHUAN";
             break;
         }
         if (code >= 2015 && code <= 2020)
         {
-            return "CHUANG";
+            pinyin = "CHUANG";
             break;
         }
         if (code >= 2021 && code <= 2025)
         {
-            return "CHUI";
+            pinyin = "CHUI";
             break;
         }
         if (code >= 2026 && code <= 2032)
         {
-            return "CHUN";
+            pinyin = "CHUN";
             break;
         }
         if (code >= 2033 && code <= 2034)
         {
-            return "CHUO";
+            pinyin = "CHUO";
             break;
         }
         if (code >= 2035 && code <= 2046)
         {
-            return "CI";
+            pinyin = "CI";
             break;
         }
         if (code >= 2047 && code <= 2052)
         {
-            return "CONG";
+            pinyin = "CONG";
             break;
         }
         if (code >= 2054 && code <= 2057)
         {
-            return "CU";
+            pinyin = "CU";
             break;
         }
         if (code >= 2058 && code <= 2060)
         {
-            return "CUAN";
+            pinyin = "CUAN";
             break;
         }
         if (code >= 2061 && code <= 2068)
         {
-            return "CUI";
+            pinyin = "CUI";
             break;
         }
         if (code >= 2069 && code <= 2071)
         {
-            return "CUN";
+            pinyin = "CUN";
             break;
         }
         if (code >= 2072 && code <= 2077)
         {
-            return "CUO";
+            pinyin = "CUO";
             break;
         }
         if (code >= 2078 && code <= 2083)
         {
-            return "DA";
+            pinyin = "DA";
             break;
         }
         if (code >= 2084 && code <= 2094)
         {
-            return "DAI";
+            pinyin = "DAI";
             break;
         }
         if (code >= 2102 && code <= 2116)
         {
-            return "DAN";
+            pinyin = "DAN";
             break;
         }
         if (code >= 2117 && code <= 2121)
         {
-            return "DANG";
+            pinyin = "DANG";
             break;
         }
         if (code >= 2122 && code <= 2133)
         {
-            return "DAO";
+            pinyin = "DAO";
             break;
         }
         if (code >= 2134 && code <= 2136)
         {
-            return "DE";
+            pinyin = "DE";
             break;
         }
         if (code >= 2137 && code <= 2143)
         {
-            return "DENG";
+            pinyin = "DENG";
             break;
         }
         if (code >= 2144 && code <= 2162)
         {
-            return "DI";
+            pinyin = "DI";
             break;
         }
         if (code >= 2163 && code <= 2178)
         {
-            return "DIAN";
+            pinyin = "DIAN";
             break;
         }
         if (code >= 2179 && code <= 2187)
         {
-            return "DIAO";
+            pinyin = "DIAO";
             break;
         }
         if (code >= 2188 && code <= 2194)
         {
-            return "DIE";
+            pinyin = "DIE";
             break;
         }
         if (code >= 2201 && code <= 2209)
         {
-            return "DING";
+            pinyin = "DING";
             break;
         }
         if (code == 2210)
         {
-            return "DIU";
+            pinyin = "DIU";
             break;
         }
         if (code >= 2211 && code <= 2220)
         {
-            return "DONG";
+            pinyin = "DONG";
             break;
         }
         if (code >= 2221 && code <= 2227)
         {
-            return "DOU";
+            pinyin = "DOU";
             break;
         }
         if (code >= 2228 && code <= 2242)
         {
-            return "DU";
+            pinyin = "DU";
             break;
         }
         if (code >= 2243 && code <= 2248)
         {
-            return "DUAN";
+            pinyin = "DUAN";
             break;
         }
         if (code >= 2249 && code <= 2252)
         {
-            return "DUI";
+            pinyin = "DUI";
             break;
         }
         if (code >= 2253 && code <= 2261)
         {
-            return "DUN";
+            pinyin = "DUN";
             break;
         }
         if (code >= 2262 && code <= 2273)
         {
-            return "DUO";
+            pinyin = "DUO";
             break;
         }
         if (code >= 2274 && code <= 2286)
         {
-            return "E";
+            pinyin = "E";
             break;
         }
         if (code == 2287)
         {
-            return "EN";
+            pinyin = "EN";
             break;
         }
         if (code >= 2288 && code <= 2231)
         {
-            return "ER";
+            pinyin = "ER";
             break;
         }
         if (code >= 2302 && code <= 2309)
         {
-            return "FA";
+            pinyin = "FA";
             break;
         }
         if (code >= 2310 && code <= 2326)
         {
-            return "FAN";
+            pinyin = "FAN";
             break;
         }
         if (code >= 2327 && code <= 2337)
         {
-            return "FANG";
+            pinyin = "FANG";
             break;
         }
         if (code >= 2338 && code <= 2349)
         {
-            return "FEI";
+            pinyin = "FEI";
             break;
         }
         if (code >= 2350 && code <= 2364)
         {
-            return "FEN";
+            pinyin = "FEN";
             break;
         }
         if (code >= 2365 && code <= 2379)
         {
-            return "FENG";
+            pinyin = "FENG";
             break;
         }
         if (code == 2380)
         {
-            return "FO";
+            pinyin = "FO";
             break;
         }
         if (code == 2381)
         {
-            return "FOU";
+            pinyin = "FOU";
             break;
         }
         if (code >= 2382 && code <= 2432)
         {
-            return "FU";
+            pinyin = "FU";
             break;
         }
         if (code >= 2435 && code <= 2440)
         {
-            return "GAI";
+            pinyin = "GAI";
             break;
         }
         if (code >= 2441 && code <= 2451)
         {
-            return "GAN";
+            pinyin = "GAN";
             break;
         }
         if (code >= 2452 && code <= 2460)
         {
-            return "GANG";
+            pinyin = "GANG";
             break;
         }
         if (code >= 2461 && code <= 2470)
         {
-            return "GAO";
+            pinyin = "GAO";
             break;
         }
         if (code >= 2471 && code <= 2487)
         {
-            return "GE";
+            pinyin = "GE";
             break;
         }
         if (code == 2488)
         {
-            return "GEI";
+            pinyin = "GEI";
             break;
         }
         if (code >= 2489 && code <= 2490)
         {
-            return "GEN";
+            pinyin = "GEN";
             break;
         }
         if (code >= 2491 && code <= 2503)
         {
-            return "GENG";
+            pinyin = "GENG";
             break;
         }
         if (code >= 2504 && code <= 2518)
         {
-            return "GONG";
+            pinyin = "GONG";
             break;
         }
         if (code >= 2519 && code <= 2527)
         {
-            return "GOU";
+            pinyin = "GOU";
             break;
         }
         if (code >= 2528 && code <= 2545)
         {
-            return "GU";
+            pinyin = "GU";
             break;
         }
         if (code >= 2546 && code <= 2551)
         {
-            return "GUA";
+            pinyin = "GUA";
             break;
         }
         if (code >= 2552 && code <= 2554)
         {
-            return "GUAI";
+            pinyin = "GUAI";
             break;
         }
         if (code >= 2555 && code <= 2565)
         {
-            return "GUAN";
+            pinyin = "GUAN";
             break;
         }
         if (code >= 2566 && code <= 2568)
         {
-            return "GUANG";
+            pinyin = "GUANG";
             break;
         }
         if (code >= 2569 && code <= 2584)
         {
-            return "GUI";
+            pinyin = "GUI";
             break;
         }
         if (code >= 2585 && code <= 2587)
         {
-            return "GUN";
+            pinyin = "GUN";
             break;
         }
         if (code >= 2588 && code <= 2593)
         {
-            return "GUO";
+            pinyin = "GUO";
             break;
         }
         if (code == 2594)
         {
-            return "HA";
+            pinyin = "HA";
             break;
         }
         if (code >= 2601 && code <= 2607)
         {
-            return "HAI";
+            pinyin = "HAI";
             break;
         }
         if (code >= 2608 && code <= 2626)
         {
-            return "HAN";
+            pinyin = "HAN";
             break;
         }
         if (code >= 2627 && code <= 2629)
         {
-            return "HANG";
+            pinyin = "HANG";
             break;
         }
         if (code >= 2630 && code <= 2638)
         {
-            return "HAO";
+            pinyin = "HAO";
             break;
         }
         if (code >= 2639 && code <= 2656)
         {
-            return "HE";
+            pinyin = "HE";
             break;
         }
         if (code >= 2657 && code <= 2658)
         {
-            return "HEI";
+            pinyin = "HEI";
             break;
         }
         if (code >= 2659 && code <= 2662)
         {
-            return "HEN";
+            pinyin = "HEN";
             break;
         }
         if (code >= 2663 && code <= 2667)
         {
-            return "HENG";
+            pinyin = "HENG";
             break;
         }
         if (code >= 2668 && code <= 2676)
         {
-            return "HONG";
+            pinyin = "HONG";
             break;
         }
         if (code >= 2677 && code <= 2683)
         {
-            return "HOU";
+            pinyin = "HOU";
             break;
         }
         if (code >= 2684 && code <= 2707)
         {
-            return "HU";
+            pinyin = "HU";
             break;
         }
         if (code >= 2708 && code <= 2716)
         {
-            return "HUA";
+            pinyin = "HUA";
             break;
         }
         if (code >= 2717 && code <= 2721)
         {
-            return "HUAI";
+            pinyin = "HUAI";
             break;
         }
         if (code >= 2722 && code <= 2735)
         {
-            return "HUAN";
+            pinyin = "HUAN";
             break;
         }
         if (code >= 2736 && code <= 2749)
         {
-            return "HUANG";
+            pinyin = "HUANG";
             break;
         }
         if (code >= 2750 && code <= 2770)
         {
-            return "HUI";
+            pinyin = "HUI";
             break;
         }
         if (code >= 2771 && code <= 2776)
         {
-            return "HUN";
+            pinyin = "HUN";
             break;
         }
         if (code >= 2777 && code <= 2786)
         {
-            return "HUO";
+            pinyin = "HUO";
             break;
         }
         if (code >= 2787 && code <= 2845)
         {
-            return "JI";
+            pinyin = "JI";
             break;
         }
         if (code >= 2846 && code <= 2862)
         {
-            return "JIA";
+            pinyin = "JIA";
             break;
         }
         if (code >= 2863 && code <= 2908)
         {
-            return "JIAN";
+            pinyin = "JIAN";
             break;
         }
         if (code >= 2909 && code <= 2921)
         {
-            return "JIANG";
+            pinyin = "JIANG";
             break;
         }
         if (code >= 2922 && code <= 2949)
         {
-            return "JIAO";
+            pinyin = "JIAO";
             break;
         }
         if (code >= 2950 && code <= 2976)
         {
-            return "JIE";
+            pinyin = "JIE";
             break;
         }
         if (code >= 2977 && code <= 3002)
         {
-            return "JIN";
+            pinyin = "JIN";
             break;
         }
         if (code >= 3003 && code <= 3027)
         {
-            return "JING";
+            pinyin = "JING";
             break;
         }
         if (code >= 3028 && code <= 3029)
         {
-            return "JIONG";
+            pinyin = "JIONG";
             break;
         }
         if (code >= 3030 && code <= 3046)
         {
-            return "JIU";
+            pinyin = "JIU";
             break;
         }
         if (code >= 3047 && code <= 3071)
         {
-            return "JU";
+            pinyin = "JU";
             break;
         }
         if (code >= 3072 && code <= 3078)
         {
-            return "JUAN";
+            pinyin = "JUAN";
             break;
         }
         if (code >= 3079 && code <= 3088)
         {
-            return "JUE";
+            pinyin = "JUE";
             break;
         }
         if (code >= 3089 && code <= 3105)
         {
-            return "JUN";
+            pinyin = "JUN";
             break;
         }
         if (code >= 3106 && code <= 3109)
         {
-            return "KA";
+            pinyin = "KA";
             break;
         }
         if (code >= 3110 && code <= 3114)
         {
-            return "KAI";
+            pinyin = "KAI";
             break;
         }
         if (code >= 3115 && code <= 3120)
         {
-            return "KAN";
+            pinyin = "KAN";
             break;
         }
         if (code >= 3121 && code <= 3127)
         {
-            return "KANG";
+            pinyin = "KANG";
             break;
         }
         if (code >= 3128 && code <= 3131)
         {
-            return "KAO";
+            pinyin = "KAO";
             break;
         }
         if (code >= 3132 && code <= 3146)
         {
-            return "KE";
+            pinyin = "KE";
             break;
         }
         if (code >= 3147 && code <= 3150)
         {
-            return "KEN";
+            pinyin = "KEN";
             break;
         }
         if (code >= 3151 && code <= 3152)
         {
-            return "KENG";
+            pinyin = "KENG";
             break;
         }
         if (code >= 3153 && code <= 3156)
         {
-            return "KONG";
+            pinyin = "KONG";
             break;
         }
         if (code >= 3157 && code <= 3160)
         {
-            return "KOU";
+            pinyin = "KOU";
             break;
         }
         if (code >= 3161 && code <= 3167)
         {
-            return "KU";
+            pinyin = "KU";
             break;
         }
         if (code >= 3168 && code <= 3172)
         {
-            return "KUA";
+            pinyin = "KUA";
             break;
         }
         if (code >= 3173 && code <= 3176)
         {
-            return "KUAI";
+            pinyin = "KUAI";
             break;
         }
         if (code >= 3177 && code <= 3178)
         {
-            return "KUAN";
+            pinyin = "KUAN";
             break;
         }
         if (code >= 3179 && code <= 3186)
         {
-            return "KUANG";
+            pinyin = "KUANG";
             break;
         }
         if (code >= 3187 && code <= 3203)
         {
-            return "KUI";
+            pinyin = "KUI";
             break;
         }
         if (code >= 3204 && code <= 3207)
         {
-            return "KUN";
+            pinyin = "KUN";
             break;
         }
         if (code >= 3208 && code <= 3211)
         {
-            return "KUO";
+            pinyin = "KUO";
             break;
         }
         if (code >= 3212 && code <= 3218)
         {
-            return "LA";
+            pinyin = "LA";
             break;
         }
         if (code >= 3219 && code <= 3221)
         {
-            return "LAI";
+            pinyin = "LAI";
             break;
         }
         if (code >= 3222 && code <= 3236)
         {
-            return "LAN";
+            pinyin = "LAN";
             break;
         }
         if (code >= 3237 && code <= 3243)
         {
-            return "LANG";
+            pinyin = "LANG";
             break;
         }
         if (code >= 3244 && code <= 3252)
         {
-            return "LAO";
+            pinyin = "LAO";
             break;
         }
         if (code >= 3253 && code <= 3254)
         {
-            return "LE";
+            pinyin = "LE";
             break;
         }
         if (code >= 3255 && code <= 3265)
         {
-            return "LEI";
+            pinyin = "LEI";
             break;
         }
         if (code >= 3266 && code <= 3268)
         {
-            return "LENG";
+            pinyin = "LENG";
             break;
         }
         if (code >= 3269 && code <= 3308)
         {
-            return "LI";
+            pinyin = "LI";
         }
         if (code == 3309)
         {
-            return "LIA";
+            pinyin = "LIA";
             break;
         }
         if (code >= 3310 && code <= 3323)
         {
-            return "LIAN";
+            pinyin = "LIAN";
             break;
         }
         if (code >= 3324 && code <= 3334)
         {
-            return "LIANG";
+            pinyin = "LIANG";
             break;
         }
         if (code >= 3335 && code <= 3347)
         {
-            return "LIAO";
+            pinyin = "LIAO";
             break;
         }
         if (code >= 3348 && code <= 3352)
         {
-            return "LIE";
+            pinyin = "LIE";
             break;
         }
         if (code >= 3353 && code <= 3363)
         {
-            return "LIN";
+            pinyin = "LIN";
             break;
         }
         if (code >= 3364 && code <= 3378)
         {
-            return "LING";
+            pinyin = "LING";
             break;
         }
         if (code >= 3379 && code <= 3389)
         {
-            return "LIU";
+            pinyin = "LIU";
             break;
         }
         if (code >= 3390 && code <= 3404)
         {
-            return "LONG";
+            pinyin = "LONG";
             break;
         }
         if (code >= 3405 && code <= 3410)
         {
-            return "LOU";
+            pinyin = "LOU";
             break;
         }
         if (code >= 3411 && code <= 3444)
         {
-            return "LU";
+            pinyin = "LU";
             break;
         }
         if (code >= 3445 && code <= 3450)
         {
-            return "LUAN";
+            pinyin = "LUAN";
             break;
         }
         if (code >= 3451 && code <= 3452)
         {
-            return "LUE";
+            pinyin = "LUE";
             break;
         }
         if (code >= 3453 && code <= 3459)
         {
-            return "LUN";
+            pinyin = "LUN";
             break;
         }
         if (code >= 3460 && code <= 3471)
         {
-            return "LUO";
+            pinyin = "LUO";
             break;
         }
         if (code >= 3472 && code <= 3480)
         {
-            return "MA";
+            pinyin = "MA";
             break;
         }
         if (code >= 3481 && code <= 3486)
         {
-            return "MAI";
+            pinyin = "MAI";
             break;
         }
         if (code >= 3487 && code <= 3501)
         {
-            return "MAN";
+            pinyin = "MAN";
             break;
         }
         if (code >= 3502 && code <= 3507)
         {
-            return "MANG";
+            pinyin = "MANG";
             break;
         }
         if (code >= 3508 && code <= 3519)
         {
-            return "MAO";
+            pinyin = "MAO";
             break;
         }
         if (code == 3520)
         {
-            return "ME";
+            pinyin = "ME";
             break;
         }
         if (code >= 3521 && code <= 3536)
         {
-            return "MEI";
+            pinyin = "MEI";
             break;
         }
         if (code >= 3537 && code <= 3539)
         {
-            return "MEN";
+            pinyin = "MEN";
             break;
         }
         if (code >= 3540 && code <= 3547)
         {
-            return "MENG";
+            pinyin = "MENG";
             break;
         }
         if (code >= 3548 && code <= 3561)
         {
-            return "MI";
+            pinyin = "MI";
         }
         if (code >= 3562 && code <= 3570)
         {
-            return "MIAN";
+            pinyin = "MIAN";
             break;
         }
         if (code >= 3571 && code <= 3578)
         {
-            return "MIAO";
+            pinyin = "MIAO";
             break;
         }
         if (code >= 3579 && code <= 3580)
         {
-            return "MIE";
+            pinyin = "MIE";
             break;
         }
         if (code >= 3581 && code <= 3586)
         {
-            return "MIN";
+            pinyin = "MIN";
             break;
         }
         if (code >= 3587 && code <= 3592)
         {
-            return "MING";
+            pinyin = "MING";
             break;
         }
         if (code == 3593)
         {
-            return "MIU";
+            pinyin == "MIU";
             break;
         }
         if (code >= 3594 && code <= 3616)
         {
-            return "MO";
+            pinyin = "MO";
             break;
         }
         if (code >= 3617 && code <= 3619)
         {
-            return "MOU";
+            pinyin = "MOU";
             break;
         }
         if (code >= 3620 && code <= 3634)
         {
-            return "MU";
+            pinyin = "MU";
             break;
         }
         if (code >= 3635 && code <= 3641)
         {
-            return "NA";
+            pinyin = "NA";
             break;
         }
         if (code >= 3642 && code <= 3646)
         {
-            return "NAI";
+            pinyin = "NAI";
             break;
         }
         if (code >= 3647 && code <= 3649)
         {
-            return "NAN";
+            pinyin = "NAN";
             break;
         }
         if (code == 3650)
         {
-            return "NANG";
+            pinyin = "NANG";
             break;
         }
         if (code >= 3651 && code <= 3655)
         {
-            return "NAO";
+            pinyin = "NAO";
             break;
         }
         if (code == 3656)
         {
-            return "NE";
+            pinyin = "NE";
             break;
         }
         if (code >= 3657 && code <= 3658)
         {
-            return "NEI";
+            pinyin = "NEI";
             break;
         }
         if (code == 3659)
         {
-            return "NEN";
+            pinyin = "NEN";
             break;
         }
         if (code == 3660)
         {
-            return "NENG";
+            pinyin = "NENG";
             break;
         }
         if (code >= 3661 && code <= 3671)
         {
-            return "NI";
+            pinyin = "NI";
             break;
         }
         if (code >= 3672 && code <= 3678)
         {
-            return "NIAN";
+            pinyin = "NIAN";
             break;
         }
         if (code >= 3679 && code <= 3680)
         {
-            return "NIANG";
+            pinyin = "NIANG";
             break;
         }
         if (code >= 3681 && code <= 3682)
         {
-            return "NIAO";
+            pinyin = "NIAO";
             break;
         }
         if (code >= 3683 && code <= 3689)
         {
-            return "NIE";
+            pinyin = "NIE";
             break;
         }
         if (code == 3690)
         {
-            return "NIN";
+            pinyin = "NIN";
             break;
         }
         if (code >= 3691 && code <= 3702)
         {
-            return "NING";
+            pinyin = "NING";
             break;
         }
         if (code >= 3703 && code <= 3706)
         {
-            return "NIU";
+            pinyin = "NIU";
             break;
         }
         if (code >= 3707 && code <= 3710)
         {
-            return "NONG";
+            pinyin = "NONG";
             break;
         }
         if (code >= 3711 && code <= 3714)
         {
-            return "NU";
+            pinyin = "NU";
             break;
         }
         if (code == 3715)
         {
-            return "NUAN";
+            pinyin = "NUAN";
             break;
         }
         if (code >= 3716 && code <= 3717)
         {
-            return "NUE";
+            pinyin = "NUE";
             break;
         }
         if (code >= 3718 && code <= 3721)
         {
-            return "NUO";
+            pinyin = "NUO";
             break;
         }
         if (code == 3722)
         {
-            return "O";
+            pinyin = "O";
             break;
         }
         if (code >= 3723 && code <= 3729)
         {
-            return "OU";
+            pinyin = "OU";
             break;
         }
         if (code >= 3730 && code <= 3735)
         {
-            return "PA";
+            pinyin = "PA";
             break;
         }
         if (code >= 3736 && code <= 3741)
         {
-            return "PAI";
+            pinyin = "PAI";
             break;
         }
         if (code >= 3742 && code <= 3749)
         {
-            return "PAN";
+            pinyin = "PAN";
             break;
         }
         if (code >= 3750 && code <= 3754)
         {
-            return "PANG";
+            pinyin = "PANG";
             break;
         }
         if (code >= 3755 && code <= 3761)
         {
-            return "PAO";
+            pinyin = "PAO";
             break;
         }
         if (code >= 3762 && code <= 3770)
         {
-            return "PEI";
+            pinyin = "PEI";
             break;
         }
         if (code >= 3771 && code <= 3772)
         {
-            return "PEN";
+            pinyin = "PEN";
             break;
         }
         if (code >= 3773 && code <= 3786)
         {
-            return "PENG";
+            pinyin = "PENG";
             break;
         }
         if (code >= 3787 && code <= 3809)
         {
-            return "PI";
+            pinyin = "PI";
             break;
         }
         if (code >= 3810 && code <= 3813)
         {
-            return "PIAN";
+            pinyin = "PIAN";
             break;
         }
         if (code >= 3814 && code <= 3817)
         {
-            return "PIAO";
+            pinyin = "PIAO";
             break;
         }
         if (code >= 3818 && code <= 3819)
         {
-            return "PIE";
+            pinyin = "PIE";
             break;
         }
         if (code >= 3820 && code <= 3824)
         {
-            return "PIN";
+            pinyin = "PIN";
             break;
         }
         if (code >= 3825 && code <= 3833)
         {
-            return "PING";
+            pinyin = "PING";
             break;
         }
         if (code >= 3834 && code <= 3841)
         {
-            return "PO";
+            pinyin = "PO";
             break;
         }
         if (code == 3842)
         {
-            return "POU";
+            pinyin = "POU";
             break;
         }
         if (code >= 3843 && code <= 3857)
         {
-            return "PU";
+            pinyin = "PU";
             break;
         }
         if (code >= 3858 && code <= 3893)
         {
-            return "QI";
+            pinyin = "QI";
             break;
         }
         if (code == 3894 || (code >= 3901 && code <= 3902))
         {
-            return "QIA";
+            pinyin = "QIA";
             break;
         }
         if (code >= 3903 && code <= 3924)
         {
-            return "QIAN";
+            pinyin = "QIAN";
             break;
         }
         if (code >= 3925 && code <= 3932)
         {
-            return "QIANG";
+            pinyin = "QIANG";
             break;
         }
         if (code >= 3933 && code <= 3947)
         {
-            return "QIAO";
+            pinyin = "QIAO";
             break;
         }
         if (code >= 3948 && code <= 3952)
         {
-            return "QIE";
+            pinyin = "QIE";
             break;
         }
         if (code >= 3953 && code <= 3963)
         {
-            return "QIN";
+            pinyin = "QIN";
             break;
         }
         if (code >= 3964 && code <= 3976)
         {
-            return "QING";
+            pinyin = "QING";
             break;
         }
         if (code >= 3977 && code <= 3978)
         {
-            return "QIONG";
+            pinyin = "QIONG";
             break;
         }
         if (code >= 3979 && code <= 3986)
         {
-            return "QIU";
+            pinyin = "QIU";
             break;
         }
         if (code >= 3987 && code <= 4005)
         {
-            return "QU";
+            pinyin = "QU";
             break;
         }
         if (code >= 4006 && code <= 4016)
         {
-            return "QUAN";
+            pinyin = "QUAN";
             break;
         }
         if (code >= 4017 && code <= 4024)
         {
-            return "QUE";
+            pinyin = "QUE";
             break;
         }
         if (code >= 4025 && code <= 4026)
         {
-            return "QUN";
+            pinyin = "QUN";
             break;
         }
         if (code >= 4027 && code <= 4030)
         {
-            return "RAN";
+            pinyin = "RAN";
             break;
         }
         if (code >= 4031 && code <= 4035)
         {
-            return "RANG";
+            pinyin = "RANG";
         }
         if (code >= 4036 && code <= 4038)
         {
-            return "RAO";
+            pinyin = "RAO";
             break;
         }
         if (code >= 4039 && code <= 4040)
         {
-            return "RE";
+            pinyin = "RE";
             break;
         }
         if (code >= 4041 && code <= 4050)
         {
-            return "REN";
+            pinyin = "REN";
             break;
         }
         if (code >= 4051 && code <= 4052)
         {
-            return "RENG";
+            pinyin = "RENG";
             break;
         }
         if (code == 4053)
         {
-            return "RI";
+            pinyin = "RI";
             break;
         }
         if (code >= 4054 && code <= 4063)
         {
-            return "RONG";
+            pinyin = "RONG";
             break;
         }
         if (code >= 4064 && code <= 4066)
         {
-            return "ROU";
+            pinyin = "ROU";
             break;
         }
         if (code >= 4067 && code <= 4076)
         {
-            return "RU";
+            pinyin = "RU";
             break;
         }
         if (code >= 4077 && code <= 4078)
         {
-            return "RUAN";
+            pinyin = "RUAN";
             break;
         }
         if (code >= 4079 && code <= 4081)
         {
-            return "RUI";
+            pinyin = "RUI";
             break;
         }
         if (code >= 4082 && code <= 4083)
         {
-            return "RUN";
+            pinyin = "RUN";
             break;
         }
         if (code >= 4084 && code <= 4085)
         {
-            return "RUO";
+            pinyin = "RUO";
             break;
         }
         if (code >= 4086 && code <= 4088)
         {
-            return "SA";
+            pinyin = "SA";
             break;
         }
         if (code >= 4089 && code <= 4092)
         {
-            return "SAI";
+            pinyin = "SAI";
             break;
         }
         if (code >= 4093 && code <= 4094)
         {
-            return "SAN";
+            pinyin = "SAN";
             break;
         }
         if (code >= 4101 && code <= 4102)
         {
-            return "SAN";
+            pinyin = "SAN";
             break;
         }
         if (code >= 4103 && code <= 4105)
         {
-            return "SANG";
+            pinyin = "SANG";
             break;
         }
         if (code >= 4106 && code <= 4109)
         {
-            return "SAO";
+            pinyin = "SAO";
             break;
         }
         if (code >= 4110 && code <= 4112)
         {
-            return "SE";
+            pinyin = "SE";
             break;
         }
         if (code == 4113)
         {
-            return "SEN";
+            pinyin = "SEN";
         }
         if (code == 4114)
         {
-            return "SENG";
+            pinyin = "SENG";
             break;
         }
         if (code >= 4115 && code <= 4123)
         {
-            return "SHA";
+            pinyin = "SHA";
             break;
         }
         if (code >= 4124 && code <= 4125)
         {
-            return "SHAI";
+            pinyin = "SHAI";
             break;
         }
         if (code >= 4126 && code <= 4141)
         {
-            return "SHAN";
+            pinyin = "SHAN";
             break;
         }
         if (code >= 4142 && code <= 4149)
         {
-            return "SHANG";
+            pinyin = "SHANG";
             break;
         }
         if (code >= 4150 && code <= 4160)
         {
-            return "SHAO";
+            pinyin = "SHAO";
             break;
         }
         if (code >= 4161 && code <= 4172)
         {
-            return "SHE";
+            pinyin = "SHE";
             break;
         }
         if (code >= 4173 && code <= 4188)
         {
-            return "SHEN";
+            pinyin = "SHEN";
             break;
         }
         if (code >= 4189 && code <= 4205)
         {
-            return "SHENG";
+            pinyin = "SHENG";
             break;
         }
         if (code >= 4206 && code <= 4252)
         {
-            return "SHI";
+            pinyin = "SHI";
             break;
         }
         if (code >= 4253 && code <= 4262)
         {
-            return "SHOU";
+            pinyin = "SHOU";
             break;
         }
         if (code >= 4263 && code <= 4301)
         {
-            return "SHU";
+            pinyin = "SHU";
             break;
         }
         if (code >= 4302 && code <= 4303)
         {
-            return "SHUA";
+            pinyin = "SHUA";
             break;
         }
         if (code >= 4304 && code <= 4307)
         {
-            return "SHUAI";
+            pinyin = "SHUAI";
             break;
         }
         if (code >= 4308 && code <= 4309)
         {
-            return "SHUAN";
+            pinyin = "SHUAN";
             break;
         }
         if (code >= 4310 && code <= 4312)
         {
-            return "SHUANG";
+            pinyin = "SHUANG";
             break;
         }
         if (code >= 4313 && code <= 4316)
         {
-            return "SHUI";
+            pinyin = "SHUI";
             break;
         }
         if (code >= 4317 && code <= 4320)
         {
-            return "SHUN";
+            pinyin = "SHUN";
             break;
         }
         if (code >= 4321 && code <= 4324)
         {
-            return "SHUO";
+            pinyin = "SHUO";
             break;
         }
         if (code >= 4325 && code <= 4340)
         {
-            return "SI";
+            pinyin = "SI";
             break;
         }
         if (code >= 4341 && code <= 4348)
         {
-            return "SONG";
+            pinyin = "SONG";
             break;
         }
         if (code >= 4349 && code <= 4352)
         {
-            return "SOU";
+            pinyin = "SOU";
             break;
         }
         if (code >= 4353 && code <= 4364)
         {
-            return "SU";
+            pinyin = "SU";
             break;
         }
         if (code >= 4365 && code <= 4367)
         {
-            return "SUAN";
+            pinyin = "SUAN";
             break;
         }
         if (code >= 4368 && code <= 4378)
         {
-            return "SUI";
+            pinyin = "SUI";
             break;
         }
         if (code >= 4379 && code <= 4381)
         {
-            return "SUN";
+            pinyin = "SUN";
             break;
         }
         if (code >= 4382 && code <= 4389)
         {
-            return "SUO";
+            pinyin = "SUO";
             break;
         }
         if (code >= 4390 && code <= 4404)
         {
-            return "TA";
+            pinyin = "TA";
             break;
         }
         if (code >= 4405 && code <= 4413)
         {
-            return "TAI";
+            pinyin = "TAI";
             break;
         }
         if (code >= 4414 && code <= 4431)
         {
-            return "TAN";
+            pinyin = "TAN";
             break;
         }
         if (code >= 4432 && code <= 4444)
         {
-            return "TANG";
+            pinyin = "TANG";
             break;
         }
         if (code >= 4445 && code <= 4455)
         {
-            return "TAO";
+            pinyin = "TAO";
             break;
         }
         if (code == 4456)
         {
-            return "TE";
+            pinyin = "TE";
             break;
         }
         if (code >= 4457 && code <= 4460)
         {
-            return "TENG";
+            pinyin = "TENG";
             break;
         }
         if (code >= 4461 && code <= 4475)
         {
-            return "TI";
+            pinyin = "TI";
             break;
         }
         if (code >= 4476 && code <= 4483)
         {
-            return "TIAN";
+            pinyin = "TIAN";
             break;
         }
         if (code >= 4484 && code <= 4488)
         {
-            return "TIAO";
+            pinyin = "TIAO";
             break;
         }
         if (code >= 4489 && code <= 4491)
         {
-            return "TIE";
+            pinyin = "TIE";
             break;
         }
         if (code >= 4492 && code <= 4507)
         {
-            return "TING";
+            pinyin = "TING";
             break;
         }
         if (code >= 4508 && code <= 4520)
         {
-            return "TONG";
+            pinyin = "TONG";
             break;
         }
         if (code >= 4521 && code <= 4524)
         {
-            return "TOU";
+            pinyin = "TOU";
             break;
         }
         if (code >= 4525 && code <= 4535)
         {
-            return "TU";
+            pinyin = "TU";
             break;
         }
         if (code >= 4536 && code <= 4537)
         {
-            return "TUAN";
+            pinyin = "TUAN";
             break;
         }
         if (code >= 4538 && code <= 4543)
         {
-            return "TUI";
+            pinyin = "TUI";
             break;
         }
         if (code >= 4544 && code <= 4546)
         {
-            return "TUN";
+            pinyin = "TUN";
             break;
         }
         if (code >= 4547 && code <= 4557)
         {
-            return "TUO";
+            pinyin = "TUO";
             break;
         }
         if (code >= 4558 && code <= 4564)
         {
-            return "WA";
+            pinyin = "WA";
             break;
         }
         if (code >= 4565 && code <= 4566)
         {
-            return "WAI";
+            pinyin = "WAI";
             break;
         }
         if (code >= 4567 && code <= 4583)
         {
-            return "WAN";
+            pinyin = "WAN";
             break;
         }
         if (code >= 4584 && code <= 4593)
         {
-            return "WANG";
+            pinyin = "WANG";
             break;
         }
         if (code >= 4594 && code <= 4632)
         {
-            return "WEI";
+            pinyin = "WEI";
             break;
         }
         if (code >= 4633 && code <= 4642)
         {
-            return "WEN";
+            pinyin = "WEN";
             break;
         }
         if (code >= 4643 && code <= 4645)
         {
-            return "WENG";
+            pinyin = "WENG";
             break;
         }
         if (code >= 4646 && code <= 4654)
         {
-            return "WO";
+            pinyin = "WO";
             break;
         }
         if (code >= 4655 && code <= 4683)
         {
-            return "WU";
+            pinyin = "WU";
             break;
         }
         if (code >= 4684 && code <= 4724)
         {
-            return "XI";
+            pinyin = "XI";
             break;
         }
         if (code >= 4725 && code <= 4737)
         {
-            return "XIA";
+            pinyin = "XIA";
             break;
         }
         if (code >= 4738 && code <= 4763)
         {
-            return "XIAN";
+            pinyin = "XIAN";
             break;
         }
         if (code >= 4764 && code <= 4783)
         {
-            return "XIANG";
+            pinyin = "XIANG";
             break;
         }
         if (code >= 4784 && code <= 4807)
         {
-            return "XIAO";
+            pinyin = "XIAO";
             break;
         }
         if (code >= 4809 && code <= 4828)
         {
-            return "XIE";
+            pinyin = "XIE";
             break;
         }
         if (code >= 4829 && code <= 4838)
         {
-            return "XIN";
+            pinyin = "XIN";
             break;
         }
         if (code >= 4839 && code <= 4853)
         {
-            return "XING";
+            pinyin = "XING";
             break;
         }
         if (code >= 4854 && code <= 4860)
         {
-            return "XIONG";
+            pinyin = "XIONG";
             break;
         }
         if (code >= 4861 && code <= 4869)
         {
-            return "XIU";
+            pinyin = "XIU";
             break;
         }
         if (code >= 4870 && code <= 4888)
         {
-            return "XU";
+            pinyin = "XU";
             break;
         }
         if (code >= 4889 && code <= 4904)
         {
-            return "XUAN";
+            pinyin = "XUAN";
             break;
         }
         if (code >= 4905 && code <= 4910)
         {
-            return "XUE";
+            pinyin = "XUE";
             break;
         }
         if (code >= 4911 && code <= 4924)
         {
-            return "XUN";
+            pinyin = "XUN";
             break;
         }
         if (code >= 4925 && code <= 4940)
         {
-            return "YA";
+            pinyin = "YA";
             break;
         }
         if (code >= 4941 && code <= 4973)
         {
-            return "YAN";
+            pinyin = "YAN";
             break;
         }
         if (code >= 4974 && code <= 4990)
         {
-            return "YANG";
+            pinyin = "YANG";
             break;
         }
         if (code >= 4991 && code <= 5011)
         {
-            return "YAO";
+            pinyin = "YAO";
             break;
         }
         if (code >= 5012 && code <= 5026)
         {
-            return "YE";
+            pinyin = "YE";
             break;
         }
         if (code >= 5027 && code <= 5079)
         {
-            return "YI";
+            pinyin = "YI";
             break;
         }
         if (code >= 5080 && code <= 5101)
         {
-            return "YIN";
+            pinyin = "YIN";
             break;
         }
         if (code >= 5102 && code <= 5119)
         {
-            return "YING";
+            pinyin = "YING";
             break;
         }
         if (code == 5120)
         {
-            return "YO";
+            pinyin = "YO";
             break;
         }
         if (code >= 5121 && code <= 5135)
         {
-            return "YONG";
+            pinyin = "YONG";
             break;
         }
         if (code >= 5136 && code <= 5155)
         {
-            return "YOU";
+            pinyin = "YOU";
             break;
         }
         if (code >= 5156 && code <= 5206)
         {
-            return "YU";
+            pinyin = "YU";
             break;
         }
         if (code >= 5207 && code <= 5226)
         {
-            return "YUAN";
+            pinyin = "YUAN";
             break;
         }
         if (code >= 5227 && code <= 5236)
         {
-            return "YUE";
+            pinyin = "YUE";
             break;
         }
         if (code >= 5237 && code <= 5248)
         {
-            return "YUN";
+            pinyin = "YUN";
             break;
         }
         if (code >= 5249 && code <= 5251)
         {
-            return "ZA";
+            pinyin = "ZA";
             break;
         }
         if (code >= 5252 && code <= 5258)
         {
-            return "ZAI";
+            pinyin = "ZAI";
             break;
         }
         if (code >= 5259 && code <= 5262)
         {
-            return "ZAN";
+            pinyin = "ZAN";
             break;
         }
         if (code >= 5263 && code <= 5265)
         {
-            return "ZANG";
+            pinyin = "ZANG";
             break;
         }
         if (code >= 5266 && code <= 5279)
         {
-            return "ZAO";
+            pinyin = "ZAO";
             break;
         }
         if (code >= 5280 && code <= 5283)
         {
-            return "ZE";
+            pinyin = "ZE";
             break;
         }
         if (code == 5284)
         {
-            return "ZEI";
+            pinyin = "ZEI";
             break;
         }
         if (code == 5285)
         {
-            return "ZEN";
+            pinyin = "ZEN";
             break;
         }
         if (code >= 5286 && code <= 5289)
         {
-            return "ZENG";
+            pinyin = "ZENG";
             break;
         }
         if (code >= 5290 && code <= 5309)
         {
-            return "ZHA";
+            pinyin = "ZHA";
             break;
         }
         if (code >= 5310 && code <= 5315)
         {
-            return "ZHAI";
+            pinyin = "ZHAI";
             break;
         }
         if (code >= 5316 && code <= 5332)
         {
-            return "ZHAN";
+            pinyin = "ZHAN";
             break;
         }
         if (code >= 5333 && code <= 5347)
         {
-            return "ZHANG";
+            pinyin = "ZHANG";
             break;
         }
         if (code >= 5348 && code <= 5357)
         {
-            return "ZHAO";
+            pinyin = "ZHAO";
             break;
         }
         if (code >= 5358 && code <= 5367)
         {
-            return "ZHE";
+            pinyin = "ZHE";
             break;
         }
         if (code >= 5368 && code <= 5383)
         {
-            return "ZHEN";
+            pinyin = "ZHEN";
             break;
         }
         if (code >= 5384 && code <= 5404)
         {
-            return "ZHENG";
+            pinyin = "ZHENG";
             break;
         }
         if (code >= 5405 && code <= 5447)
         {
-            return "ZHI";
+            pinyin = "ZHI";
             break;
         }
         if (code >= 5448 && code <= 5458)
         {
-            return "ZHONG";
+            pinyin = "ZHONG";
             break;
         }
         if (code >= 5459 && code <= 5472)
         {
-            return "ZHOU";
+            pinyin = "ZHOU";
             break;
         }
         if (code >= 5473 && code <= 5504)
         {
-            return "ZHU";
+            pinyin = "ZHU";
             break;
         }
         if (code >= 5505 && code <= 5506)
         {
-            return "ZHUA";
+            pinyin = "ZHUA";
             break;
         }
         if (code == 5507)
         {
-            return "ZHUAI";
+            pinyin = "ZHUAI";
             break;
         }
         if (code >= 5508 && code <= 5513)
         {
-            return "ZHUAN";
+            pinyin = "ZHUAN";
             break;
         }
         if (code >= 5514 && code <= 5520)
         {
-            return "ZHUANG";
+            pinyin = "ZHUANG";
             break;
         }
         if (code >= 5521 && code <= 5526)
         {
-            return "ZHUI";
+            pinyin = "ZHUI";
             break;
         }
         if (code >= 5527 && code <= 5528)
         {
-            return "ZHUN";
+            pinyin = "ZHUN";
             break;
         }
         if (code >= 5529 && code <= 5539)
         {
-            return "ZHUO";
+            pinyin = "ZHUO";
             break;
         }
         if (code >= 5540 && code <= 5554)
         {
-            return "ZI";
+            pinyin = "ZI";
             break;
         }
         if (code >= 5555 && code <= 5561)
         {
-            return "ZONG";
+            pinyin = "ZONG";
             break;
         }
         if (code >= 5562 && code <= 5565)
         {
-            return "ZOU";
+            pinyin = "ZOU";
             break;
         }
         if (code >= 5566 && code <= 5573)
         {
-            return "ZU";
+            pinyin = "ZU";
             break;
         }
         if (code >= 5574 && code <= 5575)
         {
-            return "ZUAN";
+            pinyin = "ZUAN";
             break;
         }
         if (code >= 5576 && code <= 5579)
         {
-            return "ZUI";
+            pinyin = "ZUI";
             break;
         }
         if (code >= 5580 && code <= 5581)
         {
-            return "ZUN";
+            pinyin = "ZUN";
             break;
         }
         if (code >= 5582 && code <= 5589)
         {
-            return "ZUO";
+            pinyin = "ZUO";
             break;
         }
     }
-    return "?";
+    if (pinyin.isEmpty())
+    {
+        pinyin = "";
+    }
+    return pinyin;
 }

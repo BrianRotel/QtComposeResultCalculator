@@ -97,9 +97,7 @@
     <QtUic Include="QtChildWidget.ui" />
     <QtUic Include="QtComposeResultCalculator.ui" />
     <QtMoc Include="QtComposeResultCalculator.h" />
-    <ClCompile Include="pinyin.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="ChineseLetterHelper.cpp" />
     <ClCompile Include="QtChildWidget.cpp" />
     <ClCompile Include="QtComposeResultCalculator.cpp" />
     <ClCompile Include="main.cpp" />
@@ -108,6 +106,7 @@
     <ResourceCompile Include="QtComposeResultCalculator.rc" />
     <QtMoc Include="QtSetCompose.h" />
     <QtMoc Include="QtChildWidget.h" />
+    <ClInclude Include="ChineseLetterHelper.h" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="QtSetCompose.cpp" />
     <ClCompile Include="stdafx.cpp">
