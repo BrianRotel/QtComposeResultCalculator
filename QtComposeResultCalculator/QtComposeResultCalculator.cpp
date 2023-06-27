@@ -17,13 +17,28 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     : QWidget(parent)
 {
     ui.setupUi(this);
-    //QString tests = "中华人民共和国 People's Republic of China";
-    QString tests = tr("这是一个正确的例子");
+#if 0
+    //第一种方式
+    QString tests;
+    QString firstLetter, firstLetters, pinyin;
+    //tests = "中华人民共和国 People's Republic of China";
+    tests = tr("这是一个正确的例子");
     QString firstLetter = ChineseLetterHelper::GetFirstLetter(tests);
     QString firstLetters = ChineseLetterHelper::GetFirstLetters(tests);
     QString pinyin = ChineseLetterHelper::GetPinyins(tests);
-    qDebug() << "firstLetter:" << firstLetter << "firstLetters:" << firstLetters << "pinyin:" << pinyin;
     //备注：此部分代码在取单个二级字的首字母时无法得到相应的内容
+//#else 第二种方式
+    QStringList listPy = ChineseLetterHelper::readPYFile();
+    firstLetter = ChineseLetterHelper::Ch2PY(tests, listPy);
+    firstLetters = ChineseLetterHelper::Ch2APY(tests);
+    qDebug() << "firstLetter:" << firstLetter << "firstLetters:" << firstLetters << "pinyin:" << pinyin;
+#endif // 0
+
+
+
+
+
+
 
 
     ui.pushButton->setToolTip("点击写入文件");
