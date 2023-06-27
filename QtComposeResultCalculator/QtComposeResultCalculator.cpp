@@ -210,7 +210,7 @@ void QtComposeResultCalculator::tabCurrentChanged(int cur)
     if (cur == 1)
     {
         QStringList listKey = readKeys();
-        ui.listWidget->setIconSize(QSize(125, 125));//设置单个Icon大小
+        ui.listWidget->setIconSize(QSize(60, 60));//设置单个Icon大小
         ui.listWidget->setViewMode(QListView::ListMode);//设置显示模式
         ui.listWidget->setFlow(QListView::TopToBottom);//从左到右
         ui.listWidget->setResizeMode(QListView::Adjust);//大小自适应
@@ -368,6 +368,20 @@ void QtComposeResultCalculator::getKVFromChildWindow(QMap<QString, int> map)
     }
     QJsonDocument doc = readA();
     writeKV(doc, currentItemText,ob);
+
+    //点击子界面ok出来后设置listwidget的tooltips
+	if (ui.listWidget->currentItem()->toolTip().isEmpty())
+	{
+		QString str;
+		for (auto it = map.begin(); it != map.end(); it++)
+		{
+			str += it.key();
+			str += ":";
+			str += QString::number(it.value());
+		}
+		ui.listWidget->currentItem()->setToolTip(str);
+	}
+
     //QMap<QString, int> vmap = v.value<QMap<QString, int>>();
     //it = vmap.begin();
 
