@@ -71,6 +71,7 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
             int len = image.width() * image.height();
             while (len-- > 0)
             {
+                //底色为黑色
                 if (mybits->rgba_bits[0] == 0 && mybits->rgba_bits[1] == 0 && mybits->rgba_bits[2] == 0)
                 {
                     //mybits->rgba_bits[0] = 255;
@@ -372,12 +373,149 @@ void QtComposeResultCalculator::clickButton2()
         emit ui.tabWidget->currentChanged(1);
     }
 }
+
+QVariantMap readAllForVMap()
+{
+    QVariantMap mVmap;
+    //读取文件
+    QFile file("../my.json");
+    file.open(QFile::ReadOnly);
+    QByteArray all = file.readAll();
+    file.close();
+
+    QJsonDocument doc = QJsonDocument::fromJson(all);//转换成文档对象
+    if (doc.isObject())//可以不做格式判断，因为，解析的时候已经知道是什么数据了
+    {
+        QJsonObject obj = doc.object(); //得到Json对象
+        QStringList keys = obj.keys(); //得到所有key
+        for (int i = 0; i < keys.size(); i++)
+        {
+            QString key = keys.at(i);
+            QVariant value = obj.value(key).toVariant();
+            mVmap.insert(key, value);
+        }
+    }
+    return mVmap;
+}
+
+//字典,查看Myjson. kye:variant --> key --> object 
+QVariantMap vMap = readAllForVMap();
+QMultiMap<QString, int> getLine(QString str, int num=1)
+{
+    QMultiMap<QString, int> retMap;
+    //参数检查
+    if (str.isEmpty() || num < 0)
+    {
+        return retMap;
+    }
+
+    //是否在str在字典中
+    QVariant value = vMap.value(str);
+    if (value.isNull()) //不检查也可以,下面的canConvert会帮助检查
+    {
+        return retMap;
+    }
+    QJsonObject jValue;
+    if (value.canConvert(QMetaType::QJsonObject))
+    {
+        jValue = value.toJsonObject();
+        if (jValue.isEmpty())
+        {
+            //检测到最基础的不可合成,则返回不可合成那一个,这也是递归终止条件
+            retMap.insert(str, num);
+            return retMap;
+        }
+        else//值非空
+        {
+			QStringList list = jValue.keys();//所有子值.应该可以抽象出来
+			for (size_t i = 0; i < list.size(); i++)
+			{
+				for (size_t j = 0; j < num; j++)
+				{
+                    int mValue = jValue.value(list.at(i)).toInt();
+                    retMap.insert(getLine(list.at(i), mValue));
+					//if (retMap.contains(list.at(i)))
+					//{
+					//	int sum = retMap.value(list.at(i));
+					//	sum += jValue.value(list.at(i)).toInt();
+					//	retMap.insert(getLine(list.at(i), sum));
+					//}
+					//else
+					//{
+					//	int mValue = jValue.value(list.at(i)).toInt();
+					//	retMap.insert(getLine(list.at(i), mValue));
+					//}
+				}
+			}
+            
+        }
+    }
+
+    return retMap;
+}
+QMap<QString, int> getLine(QMap<QString, int> map)
+{
+    return QMap<QString, int>();
+}
+//用QStringList 验证递归的 问题是 使用QMap造成的key重复的问题
+QStringList getLine(QString str, int num ,QString st)
+{
+    QStringList retList;
+    //参数检查
+    if (str.isEmpty() || num < 0)
+    {
+        return retList;
+    }
+
+    //是否在str在字典中
+    QVariant value = vMap.value(str);
+    if (value.isNull()) //不检查也可以,下面的canConvert会帮助检查
+    {
+        return retList;
+    }
+    QJsonObject jValue;
+    if (value.canConvert(QMetaType::QJsonObject))
+    {
+        jValue = value.toJsonObject();
+        if (jValue.isEmpty())
+        {
+            //检测到最基础的不可合成,则返回不可合成那一个,这也是递归终止条件
+            retList.append(str);
+            retList.append(QString::number(num));
+            return retList;
+        }
+        else//值非空
+        {
+            QStringList list = jValue.keys();//所有子值.应该可以抽象出来
+            for (size_t i = 0; i < list.size(); i++)
+            {
+                for (size_t j = 0; j < num; j++)
+                {
+                    int mValue = jValue.value(list.at(i)).toInt();
+                    retList.append(getLine(list.at(i),mValue,""));
+                }
+            }
+
+        }
+    }
+
+    return retList;
+}
 void QtComposeResultCalculator::showLine()
 {
     qDebug() << " showLine : " << currentItemText;
     //QAction* td = qobject_cast<QAction*>(QObject::sender());
     //QString str = td->text();
 
+    //检测子目录 递归
+    // 将文件读取到内存中, 使用QVariantMap存储而不是持续读文件
+    //思路: root --> c1:num1 c2:num2 --> 1:根据num1 调用c1 num1次?
+    //2:保留num1,调用c1,将结果与num1相乘.
+    //返回值 QMap<QString,int> 参数与返回值一样,都是计算 QMap<QString,int> 直到 QMap 的key无法再分解 
+    //重载一下,(QMap<QString,int>) (QString,int)
+    //QMap<QString, int> vMap = getLine(currentItemText, 1);
+    QMultiMap<QString, int> vMap = getLine(currentItemText, 1);
+    QStringList list = getLine(currentItemText, 1,"");
     ui.tabWidget->setCurrentIndex(0);
 }
 void QtComposeResultCalculator::listItemPressed(QListWidgetItem* item)
