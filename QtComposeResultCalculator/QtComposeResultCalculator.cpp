@@ -17,6 +17,8 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     : QWidget(parent)
 {
     ui.setupUi(this);
+    //字典,查看Myjson. kye:variant --> key --> object 
+    gVMap = readAllForVMap();
 #if 0
     //第一种方式
     QString tests;
@@ -374,7 +376,7 @@ void QtComposeResultCalculator::clickButton2()
     }
 }
 
-QVariantMap readAllForVMap()
+QVariantMap QtComposeResultCalculator::readAllForVMap()
 {
     QVariantMap mVmap;
     //读取文件
@@ -398,9 +400,8 @@ QVariantMap readAllForVMap()
     return mVmap;
 }
 
-//字典,查看Myjson. kye:variant --> key --> object 
-QVariantMap vMap = readAllForVMap();
-QMultiMap<QString, int> getLine(QString str, int num=1)
+
+QMultiMap<QString, int> QtComposeResultCalculator::getLine(QString str, int num)
 {
     QMultiMap<QString, int> retMap;
     //参数检查
@@ -410,7 +411,7 @@ QMultiMap<QString, int> getLine(QString str, int num=1)
     }
 
     //是否在str在字典中
-    QVariant value = vMap.value(str);
+    QVariant value = gVMap.value(str);
     if (value.isNull()) //不检查也可以,下面的canConvert会帮助检查
     {
         return retMap;
@@ -453,12 +454,12 @@ QMultiMap<QString, int> getLine(QString str, int num=1)
 
     return retMap;
 }
-QMap<QString, int> getLine(QMap<QString, int> map)
+QMap<QString, int> QtComposeResultCalculator::getLine(QMap<QString, int> map)
 {
     return QMap<QString, int>();
 }
 //用QStringList 验证递归的 问题是 使用QMap造成的key重复的问题
-QStringList getLine(QString str, int num ,QString st)
+QStringList QtComposeResultCalculator::getLine(QString str, int num ,QString st)
 {
     QStringList retList;
     //参数检查
@@ -468,7 +469,7 @@ QStringList getLine(QString str, int num ,QString st)
     }
 
     //是否在str在字典中
-    QVariant value = vMap.value(str);
+    QVariant value = gVMap.value(str);
     if (value.isNull()) //不检查也可以,下面的canConvert会帮助检查
     {
         return retList;
@@ -514,9 +515,30 @@ void QtComposeResultCalculator::showLine()
     //返回值 QMap<QString,int> 参数与返回值一样,都是计算 QMap<QString,int> 直到 QMap 的key无法再分解 
     //重载一下,(QMap<QString,int>) (QString,int)
     //QMap<QString, int> vMap = getLine(currentItemText, 1);
-    QMultiMap<QString, int> vMap = getLine(currentItemText, 1);
-    QStringList list = getLine(currentItemText, 1,"");
+    QMultiMap<QString, int> vMMap = getLine(currentItemText);
+    QMap<QString, int> vMap;
+    //将QMultiMap转为QMap
+    for (auto it = vMMap.begin(); it != vMMap.end(); it++)
+    {
+        if (vMap.contains(it.key()))
+        {
+            vMap[it.key()] = vMap.value(it.key()) + it.value();
+        }
+        else vMap.insert(it.key(),it.value());
+    }
+    QString showStr;
+    for (auto it = vMap.constBegin(); it != vMap.constEnd(); it++)
+    {
+        showStr += it.key();
+        showStr += ":";
+        showStr += QString::number(it.value());
+        showStr += "   ";
+    }
+    QString sstr = ui.lineEdit_2->text();
+    qDebug() << " lineEdit : " << sstr;
+    //QStringList list = getLine(currentItemText, 1,"");
     ui.tabWidget->setCurrentIndex(0);
+    ui.lineEdit_2->setText(showStr);
 }
 void QtComposeResultCalculator::listItemPressed(QListWidgetItem* item)
 {

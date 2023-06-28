@@ -31,6 +31,8 @@ public slots:
 
     void clickButton2();
 
+
+
     void showLine();
 
     void listItemPressed(QListWidgetItem* item);
@@ -42,6 +44,14 @@ public slots:
 private:
     QString currentItemText;
     QMap<QString,QPixmap>pixMap;
+    QVariantMap gVMap;
+    QVariantMap readAllForVMap();
+
+    QMultiMap<QString, int> getLine(QString str, int num = 1);
+
+    QMap<QString, int> getLine(QMap<QString, int> map);
+
+    QStringList getLine(QString str, int num, QString st);
 
 private:
     Ui::QtComposeResultCalculatorClass ui;
