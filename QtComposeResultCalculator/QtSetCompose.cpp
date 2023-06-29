@@ -100,8 +100,9 @@ void QtSetCompose::setCurrentShow(QString str, QPixmap pixmap)
 	//按照比例缩放
 	//QPixmap TempPixmap = pixmap.scaled(ui.label->width(), ui.label->height(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
 	ui.label->setScaledContents(true);
-	ui.label->setPixmap(QPixmap::fromImage(image).scaled(100,100));
+	ui.label->setPixmap(QPixmap::fromImage(image).scaled(40,40));
 	ui.label->setAlignment(Qt::AlignCenter);
+	ui.label_2->setText(str);
 
 	//QString mQss = "border-image:url(:/image/bg.jpg);color:rgb(128,128,128);";
 	//ui.label->setStyleSheet(mQss);

@@ -400,7 +400,7 @@ QVariantMap QtComposeResultCalculator::readAllForVMap()
     return mVmap;
 }
 
-
+//相当于 n叉树的后序遍历
 QMultiMap<QString, int> QtComposeResultCalculator::getLine(QString str, int num)
 {
     QMultiMap<QString, int> retMap;
@@ -515,7 +515,9 @@ void QtComposeResultCalculator::showLine()
     //返回值 QMap<QString,int> 参数与返回值一样,都是计算 QMap<QString,int> 直到 QMap 的key无法再分解 
     //重载一下,(QMap<QString,int>) (QString,int)
     //QMap<QString, int> vMap = getLine(currentItemText, 1);
-    QMultiMap<QString, int> vMMap = getLine(currentItemText);
+    QMultiMap<QString, int> vMMap;
+    //QMultiMap<QString, int> vMMap = getLine(currentItemText);
+    QStringList vList = getLine(currentItemText,1,"");
     QMap<QString, int> vMap;
     //将QMultiMap转为QMap
     for (auto it = vMMap.begin(); it != vMMap.end(); it++)
