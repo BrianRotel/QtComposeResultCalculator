@@ -43,6 +43,7 @@ public slots:
 
 private:
     QString currentItemText;
+    QString fileName;
     QMap<QString,QPixmap>pixMap;
     QVariantMap gVMap;
     QVariantMap readAllForVMap();

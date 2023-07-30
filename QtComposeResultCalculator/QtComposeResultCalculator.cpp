@@ -17,6 +17,7 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     : QWidget(parent)
 {
     ui.setupUi(this);
+    fileName = "../星际工业国.json";
     //字典,查看Myjson. kye:variant --> key --> object 
     gVMap = readAllForVMap();
 #if 0
@@ -128,7 +129,7 @@ void QtComposeResultCalculator::write()
 
 
     // 写入文件
-    QFile file("../my.json");
+    QFile file(fileName);
     file.open(QFile::WriteOnly);
     file.write(json);
     file.close();
@@ -168,7 +169,7 @@ void QtComposeResultCalculator::writeKV(QJsonDocument doc, QString str, QJsonObj
     QByteArray json = docN.toJson();
 
     // 写入文件
-    QFile file("../my.json");
+    QFile file(fileName);
     file.open(QFile::WriteOnly);
     file.write(json);
     file.close();
@@ -178,7 +179,7 @@ QJsonDocument QtComposeResultCalculator::readA()
 {
 
     //读取文件
-    QFile file("../my.json");
+    QFile file(fileName);
     file.open(QFile::ReadOnly);
     QByteArray all = file.readAll();
     file.close();
@@ -190,7 +191,7 @@ void QtComposeResultCalculator::read()
 {
 
     //读取文件
-    QFile file("../my.json");
+    QFile file(fileName);
     file.open(QFile::ReadOnly);
     QByteArray all = file.readAll();
     file.close();
@@ -246,7 +247,7 @@ void QtComposeResultCalculator::read()
 QStringList QtComposeResultCalculator::readKeys()
 {
     //读取文件
-    QFile file("../my.json");
+    QFile file(fileName);
     file.open(QFile::ReadOnly);
     QByteArray all = file.readAll();
     file.close();
@@ -309,7 +310,7 @@ void QtComposeResultCalculator::clickButton()
 {
     //write();
     //read();
-    QMessageBox::warning(this, "", "写入成功");
+    QMessageBox::warning(this, "", "没有做任何更改");
 }
 
 //设置编辑框的智能提示
@@ -379,9 +380,16 @@ void QtComposeResultCalculator::clickButton2()
 QVariantMap QtComposeResultCalculator::readAllForVMap()
 {
     QVariantMap mVmap;
+    qDebug() << QDir::currentPath();
     //读取文件
-    QFile file("../my.json");
-    file.open(QFile::ReadOnly);
+    QFile file(fileName);
+    bool isopen = file.open(QFile::ReadOnly);
+    if (!isopen)
+    {
+        qDebug() << "打开文件错误!";
+        QMessageBox::warning(this, "错误", "打开文件错误");
+        return mVmap;
+    }
     QByteArray all = file.readAll();
     file.close();
 
@@ -515,9 +523,9 @@ void QtComposeResultCalculator::showLine()
     //返回值 QMap<QString,int> 参数与返回值一样,都是计算 QMap<QString,int> 直到 QMap 的key无法再分解 
     //重载一下,(QMap<QString,int>) (QString,int)
     //QMap<QString, int> vMap = getLine(currentItemText, 1);
-    QMultiMap<QString, int> vMMap;
-    //QMultiMap<QString, int> vMMap = getLine(currentItemText);
-    QStringList vList = getLine(currentItemText,1,"");
+    //QMultiMap<QString, int> vMMap;
+    QMultiMap<QString, int> vMMap = getLine(currentItemText);
+    QStringList vList = getLine(currentItemText,1,"");//debug查看
     QMap<QString, int> vMap;
     //将QMultiMap转为QMap
     for (auto it = vMMap.begin(); it != vMMap.end(); it++)
@@ -615,7 +623,7 @@ void QtComposeResultCalculator::getKVFromChildWindow(QMap<QString, int> map)
 QVariantMap QtComposeResultCalculator::getValue(QString key)
 {
     //读取文件
-    QFile file("../my.json");
+    QFile file(fileName);
     file.open(QFile::ReadOnly);
     QByteArray all = file.readAll();
     file.close();
