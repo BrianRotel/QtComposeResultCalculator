@@ -32,7 +32,7 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.5.0_msvc2019_64</QtInstall>
-    <QtModules>core;gui;widgets;core5compat</QtModules>
+    <QtModules>core;gui;widgets;core5compat;sql</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
@@ -107,7 +107,9 @@
     <QtMoc Include="QtSetCompose.h" />
     <QtMoc Include="QtChildWidget.h" />
     <ClInclude Include="ChineseLetterHelper.h" />
+    <QtMoc Include="QtMyDataBase.h" />
     <ClInclude Include="stdafx.h" />
+    <ClCompile Include="QtMyDataBase.cpp" />
     <ClCompile Include="QtSetCompose.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">Create</PrecompiledHeader>

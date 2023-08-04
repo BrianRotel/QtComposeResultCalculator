@@ -8,6 +8,7 @@
 #include <QTextCodec>
 #include "pinyin.h"
 #include "chineseletterhelper.h"
+#include "QtMyDataBase.h"
 
 #define BASESIZEBIG 18
 #define BASESIZELITT 14
@@ -20,6 +21,8 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     fileName = "../星际工业国.json";
     //字典,查看Myjson. kye:variant --> key --> object 
     gVMap = readAllForVMap();
+    QtMyDataBase myDB(this);
+    myDB.testInsert();
 #if 0
     //第一种方式
     QString tests;
