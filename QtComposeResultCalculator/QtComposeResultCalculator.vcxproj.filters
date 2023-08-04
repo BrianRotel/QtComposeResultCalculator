@@ -64,6 +64,9 @@
     <ClCompile Include="QtMyDataBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="QtOpenCV_Worker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtSetCompose.ui">
@@ -81,6 +84,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="QtMyDataBase.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="QtOpenCV_Worker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
