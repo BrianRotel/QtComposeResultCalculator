@@ -13,6 +13,8 @@ public:
 	QtOpenCV_Worker(QObject *parent);
 	~QtOpenCV_Worker();
     void laplaceGrad(cv::Mat& src, cv::Mat& dst);
+    QImage ContourExtraction(const QImage& img);
+    QImage LaplaceSharpen(const QImage& img);
 signals:
     void threadId(int*); //这个信号用来返回线程id标识
 public slots:
