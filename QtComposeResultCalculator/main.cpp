@@ -7,9 +7,8 @@
 
 int main(int argc, char *argv[])
 {
-#if 0
 	QApplication a(argc, argv);
-
+#if 0
 	std::shared_ptr<QtGrabWindow> screen_capture = std::make_shared<QtGrabWindow>();
 	if (!screen_capture.get()->InitD3D11Device()) {
 		return  -1;
