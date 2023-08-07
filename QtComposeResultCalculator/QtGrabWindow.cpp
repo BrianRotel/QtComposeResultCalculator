@@ -33,7 +33,7 @@ void QtGrabWindow::paintEvent(QPaintEvent * e)
 #else DXGI
 	QPixmap pix = QPixmap::fromImage(GetDesktopFrame());
 #endif //DXGI
-
+	resize(pix.size());
 	//QPixmap pix = qApp->screens()[0]->grabWindow(0);
 	//QPixmap pix = m_pScreen->grabWindow((WId)hwnd);
 	//QPixmap pix = m_pScreen->grabWindow(this->winId());
