@@ -67,12 +67,18 @@
     <ClCompile Include="QtOpenCV_Worker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="QtGetWindowInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtSetCompose.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="QtChildWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="QtGetWindowInfo.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -87,6 +93,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="QtOpenCV_Worker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="QtGetWindowInfo.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

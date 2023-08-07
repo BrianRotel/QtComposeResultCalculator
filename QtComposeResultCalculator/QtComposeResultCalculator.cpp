@@ -29,8 +29,8 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     QtMyDataBase myDB(this);
     myDB.testInsert();
 
-#if 0
-    Mat image = imread("C:/Users/Administrator/Pictures/ItemsAtlas.bmp", IMREAD_GRAYSCALE);
+#if 1
+    Mat image = imread("C:/Users/Administrator/Pictures/20230805090436.png", IMREAD_GRAYSCALE);
     //    get_outline(image);
 
     //    Mat image = imread("temp.png", IMREAD_GRAYSCALE);
@@ -50,9 +50,9 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     qDebug() << hierarchy.size();
 
     //    Mat draw_img = Mat::zeros(image.size(), CV_8UC3);
-    Mat image1 = imread("C:/Users/Administrator/Pictures/input.png", IMREAD_COLOR);
+    Mat image1 = imread("C:/Users/Administrator/Pictures/20230805090436.png", IMREAD_COLOR);
     drawContours(image1, contours, -1, Scalar(0, 0, 255), 1);
-    //imshow("Photo Boundaries", image1);
+    imshow("Photo Boundaries", image1);
 
     waitKey(0);
 #endif

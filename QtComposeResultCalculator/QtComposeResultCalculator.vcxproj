@@ -109,6 +109,7 @@
     <ClCompile Include="QtComposeResultCalculator.cpp" />
     <ClCompile Include="main.cpp" />
     <None Include="QtComposeResultCalculator.ico" />
+    <QtUic Include="QtGetWindowInfo.ui" />
     <QtUic Include="QtSetCompose.ui" />
     <ResourceCompile Include="QtComposeResultCalculator.rc" />
     <QtMoc Include="QtSetCompose.h" />
@@ -116,7 +117,9 @@
     <ClInclude Include="ChineseLetterHelper.h" />
     <QtMoc Include="QtMyDataBase.h" />
     <QtMoc Include="QtOpenCV_Worker.h" />
+    <QtMoc Include="QtGetWindowInfo.h" />
     <ClInclude Include="stdafx.h" />
+    <ClCompile Include="QtGetWindowInfo.cpp" />
     <ClCompile Include="QtMyDataBase.cpp" />
     <ClCompile Include="QtOpenCV_Worker.cpp" />
     <ClCompile Include="QtSetCompose.cpp" />
