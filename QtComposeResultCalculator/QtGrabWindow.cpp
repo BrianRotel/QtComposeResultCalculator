@@ -1,13 +1,17 @@
 ﻿#include "stdafx.h"
 #include "QtGrabWindow.h"
 
+//Windows系统中使用DXGI截取桌面图像 此代码中DXGI获取图像来源于 https://www.cnblogs.com/TechNomad/p/17428347.html 
+//Windows系统中使用DXGI截取桌面图像
+//https://maimai.cn/article/detail?fid=1745138640&efid=LSyZuQed3d1ClZ4gIMNPzQ
+
 QtGrabWindow::QtGrabWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
 	ui.setupUi(this);
 	setWindowTitle(QStringLiteral("Qt之grabWindow实现截图功能"));
 	m_pScreen = QApplication::primaryScreen();
-	startTimer(40);   //1秒25帧
+	startTimer(10);   //1秒25帧
 	//drawOnce();
 }
 
@@ -23,8 +27,16 @@ void QtGrabWindow::paintEvent(QPaintEvent * e)
 	// QPixmap pix = m_pScreen->grabWindow(QApplication::desktop()->winId());
 	//QList<QScreen*> wList = qApp->screens();
 	//qDebug() << wList.size();
+
+#if GDI
 	QPixmap pix = QPixmap::fromImage(myGrabWindow((WId)hwnd,false));
+#else DXGI
+	QPixmap pix = QPixmap::fromImage(GetDesktopFrame());
+#endif //DXGI
+
 	//QPixmap pix = qApp->screens()[0]->grabWindow(0);
+	//QPixmap pix = m_pScreen->grabWindow((WId)hwnd);
+	//QPixmap pix = m_pScreen->grabWindow(this->winId());
 	//绘制截屏
 	QPainter p;
 	p.begin(this);
@@ -92,7 +104,7 @@ PtrPrintWindow QtGrabWindow::printWindow()
 }
 //没有勾选使用printWindow的是使用的Bitblt方法，可以看到使用Bitblt的截图方法ppt只有个外围的框架，没截取到里面内容分，右下角完全黑的是我edge浏览器放的一个当前时间的网页。而使用print后，两个均能截出来。
 //printwindow其实是给对方发了一个WN_PAINTER消息，对方响应了这个消息就能截出来，频率高了的话可能出现闪屏现象。
-//https://maimai.cn/article/detail?fid=1745138640&efid=LSyZuQed3d1ClZ4gIMNPzQ
+
 
 //DXGI：
 //DXGI其实是Microsoft DirectX Graphics Infrastructure的缩写，是微软提供的一种可以在win8及以上系统使用的图形设备接口。它负责枚举图形适配器、枚举显示模式、选择缓冲区格式、在进程之间共享资源以及将呈现的帧传给窗口或监视器以供显示。其直接和硬件设备进行交互，具有很高的效率和性能。
@@ -102,17 +114,17 @@ PtrPrintWindow QtGrabWindow::printWindow()
 //1、有版本要求，win8以上才支持。
 //2、因为采集需要获取设备的adapter，所以无法采集桌面窗口。
 //这个要注意：初始化的线程一定要在一个没有处理过UI的线程，否则会初始化失败
-#if RESET_OBJECT
+#ifdef RESET_OBJECT
 bool QtGrabWindow::Init() {
 	int adaptIndex = 0, outputIndex = 0;        
-	QList<ScreenOutput> list;        
-	bool flag = getScreens(list); //获取屏幕列表        
-	if (!flag || list.size() == 0) 
-	{                
-		return false;        
-	}        
-	adaptIndex = list.at(0).adaptorIndex;        
-	outputIndex = list.at(0).outputIndex;        
+	//QList<ScreenOutput> list;        
+	//bool flag = getScreens(list); //获取屏幕列表        
+	//if (!flag || list.size() == 0) 
+	//{                
+	//	return false;        
+	//}        
+	//adaptIndex = list.at(0).adaptorIndex;        
+	//outputIndex = list.at(0).outputIndex;        
 	HRESULT hr = S_OK;        
 	if (m_bInit) 
 	{        
@@ -159,8 +171,8 @@ bool QtGrabWindow::Init() {
 	IDXGIFactory* pFactory;        
 	hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&pFactory));        
 	IDXGIAdapter* hDxgiAdapter = nullptr;        
-	hr = pFactory->EnumAdapters(0, &hDxgiAdapter);        
-	RESET_OBJECT(hDxgiDevice);        
+	hr = pFactory->EnumAdapters(0, &hDxgiAdapter);      
+	hDxgiDevice->Release();
 	if (FAILED(hr)) 
 	{                 
 		return FALSE;         
@@ -168,7 +180,7 @@ bool QtGrabWindow::Init() {
 	int nOutput = outputIndex;         
 	IDXGIOutput *hDxgiOutput = NULL;         
 	hr = hDxgiAdapter->EnumOutputs(nOutput, &hDxgiOutput);         
-	RESET_OBJECT(hDxgiAdapter);         
+	hDxgiAdapter->Release();
 	if (FAILED(hr)) 
 	{                 
 		return FALSE;         
@@ -176,13 +188,13 @@ bool QtGrabWindow::Init() {
 	hDxgiOutput->GetDesc(&m_dxgiOutDesc);         
 	IDXGIOutput1 *hDxgiOutput1 = NULL;         
 	hr = hDxgiOutput->QueryInterface(__uuidof(hDxgiOutput1), reinterpret_cast<void**>(&hDxgiOutput1));         
-	RESET_OBJECT(hDxgiOutput);         
+	hDxgiOutput->Release();
 	if (FAILED(hr)) 
 	{                 
 		return FALSE;        
 	}        
 	hr = hDxgiOutput1->DuplicateOutput(m_hDevice, &m_hDeskDupl);         
-	RESET_OBJECT(hDxgiOutput1);         
+	hDxgiOutput1->Release();
 	if (FAILED(hr)) 
 	{                 
 		return FALSE;         
@@ -192,7 +204,7 @@ bool QtGrabWindow::Init() {
 	return TRUE; 
 }
 bool QtGrabWindow::QueryFrame(QRect& rect, void* pImgData, INT& nImgSize) {
-	if (!m_bInit || !AttatchToThread()) 
+	if (!m_bInit /*|| !AttatchToThread()*/) 
 	{ 
 		return FALSE; 
 	}       
@@ -203,7 +215,7 @@ bool QtGrabWindow::QueryFrame(QRect& rect, void* pImgData, INT& nImgSize) {
 	{ hDesktopResource = nullptr;                return TRUE; }        // query next frame staging buffer         
 	ID3D11Texture2D *hAcquiredDesktopImage = NULL;         
 	hr = hDesktopResource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void **>(&hAcquiredDesktopImage));         
-	RESET_OBJECT(hDesktopResource);         
+	hDesktopResource->Release();
 	if (FAILED(hr)) 
 	{                 return FALSE;       }         
 	// copy old description         
@@ -220,19 +232,19 @@ bool QtGrabWindow::QueryFrame(QRect& rect, void* pImgData, INT& nImgSize) {
 	hr = m_hDevice->CreateTexture2D(&frameDescriptor, NULL, &hNewDesktopImage);          
 	if (FAILED(hr)) 
 	{                  
-		RESET_OBJECT(hAcquiredDesktopImage);                  
+		hAcquiredDesktopImage->Release();
 		m_hDeskDupl->ReleaseFrame();                  
 		return FALSE;         
 	}          
 	// copy next staging buffer to new staging buffer     
 	m_hContext->CopyResource(hNewDesktopImage, hAcquiredDesktopImage);          
-	RESET_OBJECT(hAcquiredDesktopImage);          
+	hAcquiredDesktopImage->Release();
 	m_hDeskDupl->ReleaseFrame();          // create staging buffer for map bits          
 	static IDXGISurface *hStagingSurf = NULL;          
 	if (hStagingSurf == NULL) 
 	{                  
 		hr = hNewDesktopImage->QueryInterface(__uuidof(IDXGISurface), (void **)(&hStagingSurf));                  
-		RESET_OBJECT(hNewDesktopImage);                  
+		hNewDesktopImage->Release();
 		if (FAILED(hr)) 
 		{                          
 			return FALSE;                 
@@ -247,8 +259,14 @@ bool QtGrabWindow::QueryFrame(QRect& rect, void* pImgData, INT& nImgSize) {
 		copyImageByRect((char*)mappedRect.pBits, desttopRect.size(), (char*)pImgData, nImgSize, rect);                  
 		hStagingSurf->Unmap();         
 	}         
-	RESET_OBJECT(hStagingSurf);        
+	hStagingSurf->Release();
 	return SUCCEEDED(hr);  
+}
+bool QtGrabWindow::copyImageByRect(char* src, QSize size, char* dst,int imgSize, QRect rect)
+{
+	rect.setSize(size);
+	dst = src;
+	imgSize = size.width() * size.height();
 }
 #endif // 0
 
@@ -363,8 +381,9 @@ bool QtGrabWindow::InitDuplication()
 
 	return true;
 }
-bool QtGrabWindow::GetDesktopFrame(QString fileName)
+QImage QtGrabWindow::GetDesktopFrame(QString fileName)
 {
+	QImage image;
 	HRESULT hr = S_OK;
 	DXGI_OUTDUPL_FRAME_INFO frameInfo;
 	IDXGIResource* resource = nullptr;
@@ -373,28 +392,28 @@ bool QtGrabWindow::GetDesktopFrame(QString fileName)
 
 	if (m_pDuplication == nullptr) {
 		qDebug() << __FILE__ << __FUNCTION__ << __LINE__ << "m_pDuplication is  nullptr";
-		return false;
+		return QImage();
 	}
 
 	hr = m_pDuplication->AcquireNextFrame(0, &frameInfo, &resource);
 	if (FAILED(hr)) {
-		return false;
+		return QImage();
 	}
 
 	if (resource == nullptr) {
 		qDebug() << __FILE__ << __FUNCTION__ << __LINE__ << "resource is  nullptr";
-		return false;
+		return QImage();
 	}
 
 	hr = resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&acquireFrame));
 	resource->Release();
 	if (FAILED(hr)) {
-		return false;
+		return QImage();
 	}
 
 	if (acquireFrame == nullptr) {
 		qDebug() << __FILE__ << __FUNCTION__ << __LINE__ << "acquireFrame is  nullptr";
-		return false;
+		return QImage();
 	}
 
 	D3D11_TEXTURE2D_DESC desc;
@@ -410,17 +429,17 @@ bool QtGrabWindow::GetDesktopFrame(QString fileName)
 	if (texture) {
 		/* 将图像数据从显存中拷贝到内存中 */
 		m_pDeviceContext->CopyResource(texture, acquireFrame);
-		QImage image = this->CopyDesktopImage(texture);
-		image.save(fileName, "PNG");
+		image = this->CopyDesktopImage(texture);
+		//image.save(fileName, "PNG");
 	}
 	acquireFrame->Release();
 
 	hr = m_pDuplication->ReleaseFrame();
 	if (FAILED(hr)) {
-		return false;
+		return QImage();
 	}
 
-	return true;
+	return image;
 }
 QImage QtGrabWindow::CopyDesktopImage(ID3D11Texture2D* texture)
 {
@@ -429,7 +448,20 @@ QImage QtGrabWindow::CopyDesktopImage(ID3D11Texture2D* texture)
 	D3D11_MAPPED_SUBRESOURCE mapped_resource;
 	m_pDeviceContext->Map(texture, 0, D3D11_MAP_READ, 0, &mapped_resource);
 
-	QImage image(static_cast<uchar*>(mapped_resource.pData), m_screenWidth, m_screenHeight, QImage::Format_ARGB32);
+	size_t imageSize = desc.Width * desc.Height * 4;
+	uint8_t* rgba = (uint8_t*)malloc(imageSize);
+	if (rgba == nullptr)
+	{
+		return QImage();
+	}
+	memset(rgba, 0, imageSize);
+	uint8_t* pData = (uint8_t*)mapped_resource.pData;
+	for (size_t i = 0; i < desc.Height; i++)
+	{
+		memcpy(rgba + i * desc.Width * 4, pData + i * mapped_resource.RowPitch, desc.Width * 4);
+	}
+	QImage image(static_cast<uchar*>(rgba), m_screenWidth, m_screenHeight, QImage::Format_ARGB32);
+	//QImage image(static_cast<uchar*>(mapped_resource.pData), m_screenWidth, m_screenHeight, QImage::Format_ARGB32);
 
 	texture->Release();
 	texture = nullptr;
@@ -437,23 +469,32 @@ QImage QtGrabWindow::CopyDesktopImage(ID3D11Texture2D* texture)
 	return image;
 }
 
-void QtGrabWindow::drawOnce()
-{
-	LPCWSTR className = TEXT("UnityWndClass");
-	LPCWSTR winName = TEXT("IdleSpiral");
-	HWND hwnd = FindWindow(className, winName);
-	// 截取全屏, 指定窗口Id进行截屏
-	// QPixmap pix = m_pScreen->grabWindow(QApplication::desktop()->winId());
-	//QPixmap pix = m_pScreen->grabWindow((WId)hwnd);
-	QPixmap pix = m_pScreen->grabWindow(this->winId());
-	//绘制截屏
-	QPainter p;
-	p.begin(this);
-	p.drawImage(QPoint(0, 0), pix.toImage());
-	p.end();
-}
-
 void QtGrabWindow::timerEvent(QTimerEvent* e)
 {
     update();  //更新窗口
 }
+
+//将下面的代码设置到主函数,调用函数进行bitmap图片的保存
+#if 0
+int main(int argc, char* argv[])
+{
+	std::shared_ptr<QtGrabWindow> screen_capture = std::make_shared<QtGrabWindow>();
+	if (!screen_capture.get()->InitD3D11Device()) {
+		return  -1;
+	}
+
+	if (!screen_capture.get()->InitDuplication()) {
+		return -1;
+	}
+
+	int counts = 0;
+	/* 每隔1秒获取一次图像 */
+	while (counts < 5) {
+		QString fileName = QString("%1.png").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss"));
+		screen_capture.get()->GetDesktopFrame(fileName);
+
+		counts++;
+		Sleep(1000);
+	}
+}
+#endif

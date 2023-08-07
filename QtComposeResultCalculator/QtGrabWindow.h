@@ -23,6 +23,9 @@ namespace Ui { class QtGrabWindow; }
 QT_END_NAMESPACE
 typedef BOOL(__stdcall* PtrPrintWindow)(HWND, HDC, UINT);
 
+#define RESET_OBJECT
+#define GDI 1
+
 class QtGrabWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -34,17 +37,16 @@ public:
 	void paintEvent(QPaintEvent * e) override;
 	QImage myGrabWindow(WId winId, bool needMouse);
 	PtrPrintWindow printWindow();
-#if RESET_OBJECT
+#ifdef RESET_OBJECT
 	bool Init();
 	bool QueryFrame(QRect& rect, void* pImgData, INT& nImgSize);
+	bool copyImageByRect(char* src, QSize size, char* dst, int imgSize, QRect rect);
 #endif // 0
-
 
 	bool InitD3D11Device();//b
 	bool InitDuplication();//b
-	bool GetDesktopFrame(QString fileName);//b
+	QImage GetDesktopFrame(QString fileName = "");//b
 	QImage CopyDesktopImage(ID3D11Texture2D* texture);//b
-	void drawOnce();
 	void timerEvent(QTimerEvent * e);
 
 private:
@@ -54,14 +56,17 @@ private:
 	QWidget * calcWidget;
 	QWidget * owidget;
 private:
+
+#if RESET_OBJECT
 	ID3D11Device* m_hDevice = nullptr;//a
 	ID3D11DeviceContext* m_hContext = nullptr;//a
 	DXGI_OUTPUT_DESC m_dxgiOutDesc;//a
 	IDXGIOutputDuplication* m_hDeskDupl;//a
+	bool m_bInit;
+#endif // 0
 	ID3D11Device* m_pDevice = nullptr;//b
 	IDXGIOutputDuplication* m_pDuplication;//b
 	ID3D11DeviceContext* m_pDeviceContext;//b
 	int m_screenWidth;
 	int m_screenHeight;
-	bool m_bInit;
 };
