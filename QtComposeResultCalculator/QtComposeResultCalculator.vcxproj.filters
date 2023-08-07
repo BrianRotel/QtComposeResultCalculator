@@ -73,6 +73,9 @@
     <ClCompile Include="QtGrabWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DXGIDuplicator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtSetCompose.ui">
@@ -110,6 +113,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChineseLetterHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXGIDuplicator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -105,6 +105,7 @@
     <QtUic Include="QtComposeResultCalculator.ui" />
     <QtMoc Include="QtComposeResultCalculator.h" />
     <ClCompile Include="ChineseLetterHelper.cpp" />
+    <ClCompile Include="DXGIDuplicator.cpp" />
     <ClCompile Include="QtChildWidget.cpp" />
     <ClCompile Include="QtComposeResultCalculator.cpp" />
     <ClCompile Include="main.cpp" />
@@ -120,6 +121,7 @@
     <QtMoc Include="QtOpenCV_Worker.h" />
     <QtMoc Include="QtGetWindowInfo.h" />
     <QtMoc Include="QtGrabWindow.h" />
+    <ClInclude Include="DXGIDuplicator.h" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="QtGetWindowInfo.cpp" />
     <ClCompile Include="QtGrabWindow.cpp" />
