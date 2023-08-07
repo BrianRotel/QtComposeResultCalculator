@@ -2,7 +2,7 @@
 #include "QtGrabWindow.h"
 
 //Windows系统中使用DXGI截取桌面图像 此代码中DXGI获取图像来源于 https://www.cnblogs.com/TechNomad/p/17428347.html 
-//Windows系统中使用DXGI截取桌面图像
+//Windows系统中使用GDI截取桌面图像
 //https://maimai.cn/article/detail?fid=1745138640&efid=LSyZuQed3d1ClZ4gIMNPzQ
 
 QtGrabWindow::QtGrabWindow(QWidget *parent)
@@ -267,6 +267,7 @@ bool QtGrabWindow::copyImageByRect(char* src, QSize size, char* dst,int imgSize,
 	rect.setSize(size);
 	dst = src;
 	imgSize = size.width() * size.height();
+	return true;
 }
 #endif // 0
 

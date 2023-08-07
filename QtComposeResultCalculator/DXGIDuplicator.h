@@ -1,4 +1,4 @@
-// DXGIDuplicator.h
+ï»¿// DXGIDuplicator.h
 
 #include <d3d11.h>
 #include <dxgi1_2.h>
@@ -19,7 +19,7 @@ public:
 
     bool GetDesktopFrame(ID3D11Texture2D** texture);
 
-    // ÓÑÔªº¯Êı£¬ÔÚmainº¯ÊıÀïÃæ»áÓÃµ½£¬ĞèÒª·ÃÎÊÆäË½ÓĞ³ÉÔ±
+    // å‹å…ƒå‡½æ•°ï¼Œåœ¨mainå‡½æ•°é‡Œé¢ä¼šç”¨åˆ°ï¼Œéœ€è¦è®¿é—®å…¶ç§æœ‰æˆå‘˜
     friend void SaveDesktopImage(std::string filename, ID3D11Texture2D* texture, DXGIDuplicator* duplicator);
 
 private:

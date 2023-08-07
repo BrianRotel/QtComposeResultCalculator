@@ -57,7 +57,7 @@ private:
 	QWidget * owidget;
 private:
 
-#if RESET_OBJECT
+#ifdef RESET_OBJECT
 	ID3D11Device* m_hDevice = nullptr;//a
 	ID3D11DeviceContext* m_hContext = nullptr;//a
 	DXGI_OUTPUT_DESC m_dxgiOutDesc;//a

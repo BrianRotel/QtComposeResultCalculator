@@ -1,12 +1,12 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "DXGIDuplicator.h"
 
-// ¹¹Ôìº¯Êı£¬ÀïÃæÊ²Ã´Ò²²»×ö
+// æ„é€ å‡½æ•°ï¼Œé‡Œé¢ä»€ä¹ˆä¹Ÿä¸åš
 DXGIDuplicator::DXGIDuplicator()
 {
 }
 
-// Îö¹¹º¯Êı£¬ÊÍ·ÅÏà¹Ø¶ÔÏó
+// ææ„å‡½æ•°ï¼Œé‡Šæ”¾ç›¸å…³å¯¹è±¡
 DXGIDuplicator::~DXGIDuplicator()
 {
     if (duplication_)
@@ -174,7 +174,7 @@ bool DXGIDuplicator::GetDesktopFrame(ID3D11Texture2D** texture)
 
     return true;
 }
-//½«ÏÂÃæÁ½¸öº¯ÊıÒÆµ½mainÖĞ¿ÉÒÔ±£´æÎªbitmapÍ¼Æ¬¸ñÊ½
+//å°†ä¸‹é¢ä¸¤ä¸ªå‡½æ•°ç§»åˆ°mainä¸­å¯ä»¥ä¿å­˜ä¸ºbitmapå›¾ç‰‡æ ¼å¼
 void SaveBmp(std::string filename, const uint8_t* data, int width, int height)
 {
     HANDLE hFile = CreateFileA(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -182,54 +182,54 @@ void SaveBmp(std::string filename, const uint8_t* data, int width, int height)
     {
         return;
     }
-    // ÒÑĞ´Èë×Ö½ÚÊı
+    // å·²å†™å…¥å­—èŠ‚æ•°
     DWORD bytesWritten = 0;
-    // Î»Í¼´óĞ¡£¬ÑÕÉ«Ä¬ÈÏÎª32Î»¼´rgba
+    // ä½å›¾å¤§å°ï¼Œé¢œè‰²é»˜è®¤ä¸º32ä½å³rgba
     int bmpSize = width * height * 4;
 
-    // ÎÄ¼şÍ·
+    // æ–‡ä»¶å¤´
     BITMAPFILEHEADER bmpHeader;
-    // ÎÄ¼ş×Ü´óĞ¡ = ÎÄ¼şÍ· + Î»Í¼ĞÅÏ¢Í· + Î»Í¼Êı¾İ
+    // æ–‡ä»¶æ€»å¤§å° = æ–‡ä»¶å¤´ + ä½å›¾ä¿¡æ¯å¤´ + ä½å›¾æ•°æ®
     bmpHeader.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + bmpSize;
-    // ¹Ì¶¨
+    // å›ºå®š
     bmpHeader.bfType = 0x4D42;
-    // Êı¾İÆ«ÒÆ£¬¼´Î»Í¼Êı¾İËùÔÚÎ»ÖÃ
+    // æ•°æ®åç§»ï¼Œå³ä½å›¾æ•°æ®æ‰€åœ¨ä½ç½®
     bmpHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-    // ±£ÁôÎª0
+    // ä¿ç•™ä¸º0
     bmpHeader.bfReserved1 = 0;
-    // ±£ÁôÎª0
+    // ä¿ç•™ä¸º0
     bmpHeader.bfReserved2 = 0;
-    // Ğ´ÎÄ¼şÍ·
+    // å†™æ–‡ä»¶å¤´
     WriteFile(hFile, (LPSTR)&bmpHeader, sizeof(bmpHeader), &bytesWritten, NULL);
 
-    // Î»Í¼ĞÅÏ¢Í·
+    // ä½å›¾ä¿¡æ¯å¤´
     BITMAPINFOHEADER bmiHeader;
-    // Î»Í¼ĞÅÏ¢Í·´óĞ¡
+    // ä½å›¾ä¿¡æ¯å¤´å¤§å°
     bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    // Î»Í¼ÏñËØ¿í¶È
+    // ä½å›¾åƒç´ å®½åº¦
     bmiHeader.biWidth = width;
-    // Î»Í¼ÏñËØ¸ß¶È£¬¸º¸ß¶È¼´ÉÏÏÂ·­×ª
+    // ä½å›¾åƒç´ é«˜åº¦ï¼Œè´Ÿé«˜åº¦å³ä¸Šä¸‹ç¿»è½¬
     bmiHeader.biHeight = -height;
-    // ±ØĞëÎª1
+    // å¿…é¡»ä¸º1
     bmiHeader.biPlanes = 1;
-    // ÏñËØËùÕ¼Î»Êı
+    // åƒç´ æ‰€å ä½æ•°
     bmiHeader.biBitCount = 32;
-    // 0±íÊ¾²»Ñ¹Ëõ
+    // 0è¡¨ç¤ºä¸å‹ç¼©
     bmiHeader.biCompression = 0;
-    // Î»Í¼Êı¾İ´óĞ¡
+    // ä½å›¾æ•°æ®å¤§å°
     bmiHeader.biSizeImage = bmpSize;
-    // Ë®Æ½·Ö±æÂÊ(ÏñËØ/Ã×)
+    // æ°´å¹³åˆ†è¾¨ç‡(åƒç´ /ç±³)
     bmiHeader.biXPelsPerMeter = 0;
-    // ´¹Ö±·Ö±æÂÊ(ÏñËØ/Ã×)
+    // å‚ç›´åˆ†è¾¨ç‡(åƒç´ /ç±³)
     bmiHeader.biYPelsPerMeter = 0;
-    // Ê¹ÓÃµÄÑÕÉ«£¬0ÎªÊ¹ÓÃÈ«²¿ÑÕÉ«
+    // ä½¿ç”¨çš„é¢œè‰²ï¼Œ0ä¸ºä½¿ç”¨å…¨éƒ¨é¢œè‰²
     bmiHeader.biClrUsed = 0;
-    // ÖØÒªµÄÑÕÉ«Êı£¬0ÎªËùÓĞÑÕÉ«¶¼ÖØÒª
+    // é‡è¦çš„é¢œè‰²æ•°ï¼Œ0ä¸ºæ‰€æœ‰é¢œè‰²éƒ½é‡è¦
     bmiHeader.biClrImportant = 0;
 
-    // Ğ´Î»Í¼ĞÅÏ¢Í·
+    // å†™ä½å›¾ä¿¡æ¯å¤´
     WriteFile(hFile, (LPSTR)&bmiHeader, sizeof(bmiHeader), &bytesWritten, NULL);
-    // Ğ´Î»Í¼Êı¾İ
+    // å†™ä½å›¾æ•°æ®
     WriteFile(hFile, data, bmpSize, &bytesWritten, NULL);
     CloseHandle(hFile);
 }
@@ -256,7 +256,7 @@ void SaveDesktopImage(std::string filename, ID3D11Texture2D* texture2D, DXGIDupl
     SaveBmp(filename, rgba, desc.Width, desc.Height);
     free(rgba);
 }
-//½«ÏÂÃæµÄ´úÂëÉèÖÃµ½Ö÷º¯Êı,µ÷ÓÃÉÏÃæµÄÁ½¸öº¯Êı½øĞĞbitmapÍ¼Æ¬µÄ±£´æ
+//å°†ä¸‹é¢çš„ä»£ç è®¾ç½®åˆ°ä¸»å‡½æ•°,è°ƒç”¨ä¸Šé¢çš„ä¸¤ä¸ªå‡½æ•°è¿›è¡Œbitmapå›¾ç‰‡çš„ä¿å­˜
 #if 0
 int main(int argc, char* argv[])
 {
