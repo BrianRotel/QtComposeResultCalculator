@@ -105,6 +105,12 @@
     <QtUic Include="QtComposeResultCalculator.ui" />
     <QtMoc Include="QtComposeResultCalculator.h" />
     <ClCompile Include="ChineseLetterHelper.cpp" />
+    <QtMoc Include="CrosshairLabel.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </QtMoc>
     <ClCompile Include="DXGIDuplicator.cpp" />
     <ClCompile Include="QtChildWidget.cpp" />
     <ClCompile Include="QtComposeResultCalculator.cpp" />

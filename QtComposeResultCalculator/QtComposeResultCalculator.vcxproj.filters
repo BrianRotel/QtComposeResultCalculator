@@ -110,6 +110,9 @@
     <QtMoc Include="QtGrabWindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="CrosshairLabel.cpp">
+      <Filter>Source Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChineseLetterHelper.h">

@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 
-
+#if 0
     QtGrabWindow c;
     if (!c.InitD3D11Device()) {
         return  -1;
@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
     c.show();
     QtGetWindowInfo b;
     b.show();
+#endif
     QtComposeResultCalculator w;
     w.show();
     return a.exec();

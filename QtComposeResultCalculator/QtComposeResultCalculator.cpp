@@ -29,7 +29,7 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     QtMyDataBase myDB(this);
     myDB.testInsert();
 
-#if 1
+#if 0
     Mat image = imread("C:/Users/Administrator/Pictures/20230805090436.png", IMREAD_GRAYSCALE);
     //    get_outline(image);
 
@@ -53,6 +53,39 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
     Mat image1 = imread("C:/Users/Administrator/Pictures/20230805090436.png", IMREAD_COLOR);
     drawContours(image1, contours, -1, Scalar(0, 0, 255), 1);
     imshow("Photo Boundaries", image1);
+
+    waitKey(0);
+#endif
+#if 1
+    //Mat image1 = imread("/test1.png", IMREAD_GRAYSCALE);
+    //Mat image2 = imread("/test2.png", IMREAD_GRAYSCALE);
+    qDebug() << QDir::currentPath();
+    Mat templateImg = imread("./test2.png");
+    Mat srcImg = imread("./test1.png");
+    Mat dst = srcImg.clone();
+    imshow("temp", templateImg);
+
+    int width = srcImg.cols - templateImg.cols + 1;//result宽度
+    int height = srcImg.rows - templateImg.rows + 1;//result高度
+
+    Mat resultImg(height, width, CV_32FC1);//创建结果映射图像
+    //matchTemplate(srcImg, templateImg, resultImg, TM_SQDIFF); //平方差匹配法(最好匹配0)
+    matchTemplate(srcImg, templateImg, resultImg, TM_SQDIFF_NORMED); //归一化平方差匹配法(最好匹配0)
+    //matchTemplate(srcImg, templateImg, resultImg, TM_CCORR); //相关匹配法(最坏匹配0)
+    //matchTemplate(srcImg, templateImg, resultImg, TM_CCORR_NORMED); //归一化相关匹配法(最坏匹配0)
+    //matchTemplate(srcImg, templateImg, resultImg, TM_CCOEFF); //系数匹配法(最好匹配1)
+    //matchTemplate(srcImg, templateImg, resultImg, TM_CCOEFF_NORMED);//化相关系数匹配,最佳值1
+    imshow("result", resultImg);
+    normalize(resultImg, resultImg, 0, 1, NORM_MINMAX, -1);//归一化到0-1范围
+
+    double minValue, maxValue;
+    Point minLoc, maxLoc;
+    minMaxLoc(resultImg, &minValue, &maxValue, &minLoc, &maxLoc);
+    qDebug() << "minValue=" << minValue ;
+    qDebug() << "maxValue=" << maxValue ;
+
+    rectangle(dst, maxLoc, Point(maxLoc.x + templateImg.cols, maxLoc.y + templateImg.rows), Scalar(0, 255, 0), 2, 8);
+    imshow("dst", dst);
 
     waitKey(0);
 #endif
