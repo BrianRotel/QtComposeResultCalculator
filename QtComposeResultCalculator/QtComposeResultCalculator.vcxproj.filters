@@ -76,6 +76,12 @@
     <ClCompile Include="DXGIDuplicator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="QtCrosshairLabelClick.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QtCrosshairLabelMove.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtSetCompose.ui">
@@ -110,8 +116,11 @@
     <QtMoc Include="QtGrabWindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="CrosshairLabel.cpp">
-      <Filter>Source Files</Filter>
+    <QtMoc Include="QtCrosshairLabelClick.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="QtCrosshairLabelMove.h">
+      <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

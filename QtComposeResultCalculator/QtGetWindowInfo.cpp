@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "QtGetWindowInfo.h"
+#include "QtCrosshairLabelClick.h"
 #include <tlhelp32.h>
 
 struct ProcessInfo {
@@ -118,6 +119,9 @@ QtGetWindowInfo::QtGetWindowInfo(QWidget *parent)
 	//获取所有窗口(只是含有标题)
 	EnumWindows(MyEnumProc, 0);
 #endif
+	myLabel = new QtCrosshairLabelClick();
+	
+	ui.horizontalLayout->insertWidget(1,myLabel);
 	m_timer = new QTimer();
 	connect(m_timer, &QTimer::timeout, this, &QtGetWindowInfo::slotTimeFindWindowName);
 	QObject::connect(ui.pushButton, SIGNAL(clicked(bool)), this, SLOT(on_pushButton_getPointWindowName_clicked(bool)));

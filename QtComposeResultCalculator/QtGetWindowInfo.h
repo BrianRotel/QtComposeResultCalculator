@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <QTimer>
 
+class QtCrosshairLabelClick;
 class QtGetWindowInfo : public QWidget
 {
 	Q_OBJECT
@@ -20,6 +21,6 @@ private slots:
 
 private:
 	Ui::QtGetWindowInfoClass ui;
-
+	QtCrosshairLabelClick* myLabel;
 	QTimer* m_timer;
 };
