@@ -85,6 +85,9 @@
     <ClCompile Include="QtMyClipboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="QtTestWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtSetCompose.ui">
@@ -100,6 +103,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="QtMyClipboard.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="QtTestWidget.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -129,6 +135,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="QtMyClipboard.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="QtTestWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

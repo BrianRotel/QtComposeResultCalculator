@@ -34,8 +34,8 @@ int main(int argc, char *argv[])
     //b.show();
     //QtGrabWindow c;
     //c.show();
-    QtMyClipboard d;
-    d.show();
+    //QtMyClipboard d;
+    //d.show();
 
     return a.exec();
 }
