@@ -1,22 +1,25 @@
 ﻿#pragma once
 
-#include <QMainWindow>
 #include "ui_QtGrabWindow.h"
-
 #include <QGuiApplication>
-#include <QScreen>
-//#include <QDesktopWidget>
+#include <QWindow>
+#include <QMainWindow>
+#include <QPushButton>
+#include <QVBoxLayout>
 #include <Qpainter>
+#include <QScreen>
+#include <QDebug>
+//#include <QDesktopWidget>
 
 #include "windows.h"
 #include "winuser.h"
-#include <QWindow>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QDebug>
+
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <dxgi1_2.h>
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc.hpp>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class QtGrabWindow; }

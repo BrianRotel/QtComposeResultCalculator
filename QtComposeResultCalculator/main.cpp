@@ -26,11 +26,11 @@ int main(int argc, char *argv[])
     c.show();
     QtGetWindowInfo b;
     b.show();
-
     QtComposeResultCalculator w;
     w.show();
 #endif
-    QtGetWindowInfo b;
-    b.show();
+    QtGrabWindow c;
+    c.show();
+
     return a.exec();
 }
