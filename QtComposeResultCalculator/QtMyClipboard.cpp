@@ -65,13 +65,9 @@ void QtMyClipboard::onPushButton2(bool b)
         QImage img = qvariant_cast<QImage>(mimeData->imageData());
         if (!img.isNull())
         {
-            QTextDocument* textDocument = ui.textBrowser->document();
-            textDocument->addResource(QTextDocument::ImageResource, QUrl("name"), QVariant(img));
-            ui.textBrowser->textCursor().insertImage("name");
-
             QTextDocument* textDocument1 = ui.textEdit->document();
-            textDocument1->addResource(QTextDocument::ImageResource, QUrl("name1"), QVariant(img));
-            ui.textEdit->textCursor().insertImage("name1");
+            textDocument1->addResource(QTextDocument::ImageResource, QUrl("name"), QVariant(img));
+            ui.textEdit->textCursor().insertImage("name");
         }
     }
     else if(mimeData->hasText())
@@ -80,8 +76,11 @@ void QtMyClipboard::onPushButton2(bool b)
         QString str = mimeData->text();
         if (!str.isEmpty())
         {
-            ui.textBrowser->textCursor().insertText(str);
             ui.textEdit->textCursor().insertText(str);
         }
+    }
+    else 
+    {
+        //ui.textEdit->insertFromMimeData(mimeData);
     }
 }
