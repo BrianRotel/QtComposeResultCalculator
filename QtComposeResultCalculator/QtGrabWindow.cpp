@@ -114,7 +114,7 @@ PtrPrintWindow QtGrabWindow::printWindow()
 //1、有版本要求，win8以上才支持。
 //2、因为采集需要获取设备的adapter，所以无法采集桌面窗口。
 //这个要注意：初始化的线程一定要在一个没有处理过UI的线程，否则会初始化失败
-#ifdef RESET_OBJECT
+#ifdef DXGI_TEST
 bool QtGrabWindow::Init() {
 	int adaptIndex = 0, outputIndex = 0;        
 	//QList<ScreenOutput> list;        
@@ -271,6 +271,7 @@ bool QtGrabWindow::copyImageByRect(char* src, QSize size, char* dst,int imgSize,
 }
 #endif // 0
 
+#ifdef DXGI
 bool QtGrabWindow::InitD3D11Device()
 {
 	D3D_DRIVER_TYPE driverTypes[] = {
@@ -469,6 +470,7 @@ QImage QtGrabWindow::CopyDesktopImage(ID3D11Texture2D* texture)
 
 	return image;
 }
+#endif 
 
 void QtGrabWindow::timerEvent(QTimerEvent* e)
 {
@@ -476,7 +478,7 @@ void QtGrabWindow::timerEvent(QTimerEvent* e)
 }
 
 //将下面的代码设置到主函数,调用函数进行bitmap图片的保存
-#if 0
+#ifdef DXGI
 int main(int argc, char* argv[])
 {
 	std::shared_ptr<QtGrabWindow> screen_capture = std::make_shared<QtGrabWindow>();
