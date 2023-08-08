@@ -7,6 +7,7 @@
 #include <QTimer>
 
 class QtCrosshairLabelClick;
+struct WindowInfo;
 class QtGetWindowInfo : public QWidget
 {
 	Q_OBJECT
@@ -18,6 +19,7 @@ public:
 private slots:
 	void on_pushButton_getPointWindowName_clicked(bool checked);
 	void slotTimeFindWindowName();
+	void slotShowValue(const WindowInfo& info);
 
 private:
 	Ui::QtGetWindowInfoClass ui;

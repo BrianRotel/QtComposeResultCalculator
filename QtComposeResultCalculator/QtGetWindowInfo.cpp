@@ -1,8 +1,11 @@
 ﻿#include "stdafx.h"
 #include "QtGetWindowInfo.h"
 #include "QtCrosshairLabelClick.h"
+#include <QMetaType>
 #include <tlhelp32.h>
 
+// 三种获取所有进程的方法调用在构造的 #if 0 代码块中
+#if 0
 struct ProcessInfo {
 
 	QString processID;              //进程ID
@@ -61,7 +64,8 @@ void getSnapshot()
 char m_Name[MAXBYTE];
 char m_Title[MAXBYTE];
 WORD m_nNum;
-BOOL CALLBACK enumAllWindow(HWND Hwnd, LPARAM IParm)//系统返还给你的窗口句柄,API调用进来的参数
+//系统返还给你的窗口句柄,API调用进来的参数
+BOOL CALLBACK enumAllWindow(HWND Hwnd, LPARAM IParm)
 {
 	//每次Hwnd返回回来，都需要获取他的类名和标题
 	GetClassNameA(Hwnd, m_Name, MAXBYTE);//获得指定窗口所属的类的类名
@@ -89,14 +93,16 @@ BOOL MyEnumProc(HWND hwnd, LPARAM param)
 	free(lpString);
 	return TRUE;
 }
-
+#endif
 QtGetWindowInfo::QtGetWindowInfo(QWidget *parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
+	//多线程适用
+	qRegisterMetaType<WindowInfo>("WindowInfo");
 
 #if 0 //可用
-	//获取所有进程
+	//[1]获取所有进程
 	getSnapshot();
 	for (size_t i = 0; i < m_vec.length(); i++)
 	{
@@ -111,20 +117,27 @@ QtGetWindowInfo::QtGetWindowInfo(QWidget *parent)
 				m_vec.at(i).processHandle << " " <<
 				m_vec.at(i).processName;
 		}
-	}
-	//获取所有窗口
+	}//[1]
+	//[2]获取所有窗口
 	m_nNum = 0;
 	EnumWindows(enumAllWindow, (LPARAM)"");
-
-	//获取所有窗口(只是含有标题)
+	//[2]
+	//[3]获取所有窗口(只是含有标题)
 	EnumWindows(MyEnumProc, 0);
+	//[3]
 #endif
 	myLabel = new QtCrosshairLabelClick();
 	
-	ui.horizontalLayout->insertWidget(1,myLabel);
+	//ui.horizontalLayout->insertWidget(1, myLabel);
+	ui.horizontalLayout->addWidget(myLabel);
 	m_timer = new QTimer();
-	connect(m_timer, &QTimer::timeout, this, &QtGetWindowInfo::slotTimeFindWindowName);
-	QObject::connect(ui.pushButton, SIGNAL(clicked(bool)), this, SLOT(on_pushButton_getPointWindowName_clicked(bool)));
+	bool isConnect = QObject::connect(myLabel, SIGNAL(windowInfo(const WindowInfo&)), this, SLOT(slotShowValue(const WindowInfo&)));
+	if (!isConnect)
+	{
+		qDebug() << __FILE__ << __FUNCTION__ << __LINE__ << "QtGetWindowInfo Construct Function connect QtCrosshairLabelClick-->QtGetWindowInfo Failed";
+	}
+	isConnect = connect(m_timer, &QTimer::timeout, this, &QtGetWindowInfo::slotTimeFindWindowName);
+	//isConnect = QObject::connect(ui.pushButton, SIGNAL(clicked(bool)), this, SLOT(on_pushButton_getPointWindowName_clicked(bool)));
 }
 
 QtGetWindowInfo::~QtGetWindowInfo()
@@ -182,4 +195,13 @@ void QtGetWindowInfo::slotTimeFindWindowName()
 		ui.lineEdit_windowStyle->setText(windowsStyle);
 		ui.lineEdit_windowRect->setText(windowsRect);
 	}
+}
+
+void QtGetWindowInfo::slotShowValue(const WindowInfo&info)
+{
+	ui.lineEdit_windowHwnd->setText(info.windowSHwnd);
+	ui.lineEdit_windowTitle->setText(info.windowTitle);
+	ui.lineEdit_windowClass->setText(info.windowClass);
+	ui.lineEdit_windowStyle->setText(info.windowStyle);
+	ui.lineEdit_windowRect->setText(info.windowRect);
 }

@@ -68,12 +68,9 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>PushButton</string>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
+        <string>拖动:</string>
        </property>
       </widget>
      </item>

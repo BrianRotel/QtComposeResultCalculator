@@ -3,6 +3,15 @@
 #include <QLabel>
 #include "QtCrosshairLabelMove.h"
 
+struct WindowInfo
+{
+    HWND windowHwnd;
+    QString windowSHwnd;
+    QString windowTitle;
+    QString windowClass;
+    QString windowStyle;
+    QString windowRect;
+};
 //弹出准星的可点击Label
 class QtCrosshairLabelClick : public QLabel
 {
@@ -14,7 +23,7 @@ public:
 
     void setCurrentPos(const QPoint& pos);
 signals:
-    void windowInfo(const QString& title, const QString& className, HWND hwnd);
+    void windowInfo(const WindowInfo& title);
 protected:
     void mousePressEvent(QMouseEvent* event) override;
 
@@ -31,5 +40,5 @@ signals:
 
 private:
     QtCrosshairLabelMove* m_CrosshairLabelMove;
-
+    WindowInfo info;
 };
