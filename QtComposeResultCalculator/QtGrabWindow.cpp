@@ -13,7 +13,7 @@ QtGrabWindow::QtGrabWindow(QWidget *parent)
 	ui.setupUi(this);
 	setWindowTitle(QStringLiteral("Qt之grabWindow实现截图功能"));
 
-
+	//图像匹配 --> 大图中找小图
 #if 0
 	//Mat image1 = imread("/test1.png", IMREAD_GRAYSCALE);
 	//Mat image2 = imread("/test2.png", IMREAD_GRAYSCALE);
