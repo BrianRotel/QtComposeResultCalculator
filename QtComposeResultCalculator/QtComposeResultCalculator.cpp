@@ -56,39 +56,84 @@ QtComposeResultCalculator::QtComposeResultCalculator(QWidget *parent)
 
     waitKey(0);
 #endif
-#if 1
+#if 0
     //Mat image1 = imread("/test1.png", IMREAD_GRAYSCALE);
     //Mat image2 = imread("/test2.png", IMREAD_GRAYSCALE);
-    qDebug() << QDir::currentPath();
+    //qDebug() << QDir::currentPath();
     Mat templateImg = imread("./test2.png");
     Mat srcImg = imread("./test1.png");
-    Mat dst = srcImg.clone();
+    //Mat dst = srcImg.clone();
     imshow("temp", templateImg);
 
-    int width = srcImg.cols - templateImg.cols + 1;//result宽度
-    int height = srcImg.rows - templateImg.rows + 1;//result高度
+    //int width = srcImg.cols - templateImg.cols + 1;//result宽度
+    //int height = srcImg.rows - templateImg.rows + 1;//result高度
 
-    Mat resultImg(height, width, CV_32FC1);//创建结果映射图像
+    //Mat resultImg(height, width, CV_32FC1);//创建结果映射图像
+    Mat resultImg(srcImg.rows - templateImg.rows + 1, srcImg.cols - templateImg.cols + 1, CV_32FC1); //构建结果矩阵
+
     //matchTemplate(srcImg, templateImg, resultImg, TM_SQDIFF); //平方差匹配法(最好匹配0)
     //matchTemplate(srcImg, templateImg, resultImg, TM_SQDIFF_NORMED); //归一化平方差匹配法(最好匹配0)
     //matchTemplate(srcImg, templateImg, resultImg, TM_CCORR); //相关匹配法(最坏匹配0)
     //matchTemplate(srcImg, templateImg, resultImg, TM_CCORR_NORMED); //归一化相关匹配法(最坏匹配0)
     //matchTemplate(srcImg, templateImg, resultImg, TM_CCOEFF); //系数匹配法(最好匹配1)
     matchTemplate(srcImg, templateImg, resultImg, TM_CCOEFF_NORMED);//化相关系数匹配,最佳值1
-    imshow("result", resultImg);
-    normalize(resultImg, resultImg, 0, 1, NORM_MINMAX, -1);//归一化到0-1范围
+    //imshow("result", resultImg);
+    //normalize(resultImg, resultImg, 0, 1, NORM_MINMAX, -1);//归一化到0-1范围
 
     double minValue, maxValue;
     Point minLoc, maxLoc;
     minMaxLoc(resultImg, &minValue, &maxValue, &minLoc, &maxLoc);
-    qDebug() << "minValue=" << minValue ;
-    qDebug() << "maxValue=" << maxValue ;
+    //qDebug() << "minValue=" << minValue ;
+    //qDebug() << "maxValue=" << maxValue ;
+    //匹配结果的四个顶点
+    Point pt1(maxLoc.x, maxLoc.y);
+    Point pt2(maxLoc.x + templateImg.cols, maxLoc.y);
+    Point pt3(maxLoc.x, maxLoc.y + templateImg.rows);
+    Point pt4(maxLoc.x + templateImg.cols, maxLoc.y + templateImg.rows);
 
-    rectangle(dst, maxLoc, Point(maxLoc.x + templateImg.cols, maxLoc.y + templateImg.rows), Scalar(0, 255, 0), 2, 8);
-    imshow("dst", dst);
-
-    waitKey(0);
+    //画线
+    line(srcImg, pt1, pt2, cv::Scalar(0, 255, 0), 11, 1);
+    line(srcImg, pt2, pt4, cv::Scalar(0, 255, 0), 11, 1);
+    line(srcImg, pt4, pt3, cv::Scalar(0, 255, 0), 11, 1);
+    line(srcImg, pt3, pt1, cv::Scalar(0, 255, 0), 11, 1);
+    //rectangle(srcImg, maxLoc, Point(maxLoc.x + templateImg.cols, maxLoc.y + templateImg.rows), Scalar(0, 255, 0), 2, 8);
+    //imshow("dst", dst);
+    imshow("result", srcImg);
+    waitKey();
 #endif
+#if 0
+    Mat image = imread("./test1.png");  //读取原图
+    Mat templ = imread("./test2.png", 0);  //读取模板图的灰度图像
+
+    Mat src;
+    cvtColor(image, src, COLOR_RGB2GRAY); //将原图转换为灰度图像
+
+    Mat result(src.rows - templ.rows + 1, src.cols - templ.cols + 1, CV_32FC1); //构建结果矩阵
+    matchTemplate(src, templ, result, TM_CCOEFF_NORMED); //模板匹配
+
+    double dMaxVal; //分数最大值
+    Point ptMaxLoc; //最大值坐标
+    minMaxLoc(result, 0, &dMaxVal, 0, &ptMaxLoc); //寻找结果矩阵中的最大值
+
+    //匹配结果的四个顶点
+    Point pt1(ptMaxLoc.x, ptMaxLoc.y);
+    Point pt2(ptMaxLoc.x + templ.cols, ptMaxLoc.y);
+    Point pt3(ptMaxLoc.x, ptMaxLoc.y + templ.rows);
+    Point pt4(ptMaxLoc.x + templ.cols, ptMaxLoc.y + templ.rows);
+
+    //画线
+    line(image, pt1, pt2, cv::Scalar(0, 255, 0), 11, 1);
+    line(image, pt2, pt4, cv::Scalar(0, 255, 0), 11, 1);
+    line(image, pt4, pt3, cv::Scalar(0, 255, 0), 11, 1);
+    line(image, pt3, pt1, cv::Scalar(0, 255, 0), 11, 1);
+
+
+    imshow("image", image);
+    imwrite("img.jpg", image);
+    waitKey();
+
+#endif // 0
+
 #if 0
     //第一种方式
     QString tests;
