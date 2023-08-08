@@ -2,6 +2,7 @@
 #include "QtComposeResultCalculator.h"
 #include "QtGetWindowInfo.h"
 #include "QtGrabWindow.h"
+#include "QtMyClipboard.h"
 #include <QtWidgets/QApplication>
 #include <QScreen>
 
@@ -29,8 +30,12 @@ int main(int argc, char *argv[])
     QtComposeResultCalculator w;
     w.show();
 #endif
-    QtGrabWindow c;
-    c.show();
+    //QtGetWindowInfo b;
+    //b.show();
+    //QtGrabWindow c;
+    //c.show();
+    QtMyClipboard d;
+    d.show();
 
     return a.exec();
 }

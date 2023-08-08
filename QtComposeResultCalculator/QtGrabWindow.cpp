@@ -16,7 +16,7 @@ QtGrabWindow::QtGrabWindow(QWidget *parent)
 	ui.setupUi(this);
 	setWindowTitle(QStringLiteral("Qt之grabWindow实现截图功能"));
 
-#if 1
+#if 0
 	Mat image = imread("C:/Users/Administrator/Pictures/20230805090436.png", IMREAD_GRAYSCALE);
 	//    get_outline(image);
 
@@ -98,7 +98,7 @@ QtGrabWindow::QtGrabWindow(QWidget *parent)
 	Mat result(src.rows - templ.rows + 1, src.cols - templ.cols + 1, CV_32FC1); //构建结果矩阵
 	matchTemplate(src, templ, result, TM_CCOEFF_NORMED); //模板匹配
 
-	double dMaxVal; //分数最大值
+	double dMaxVal; //分数最大值	
 	Point ptMaxLoc; //最大值坐标
 	minMaxLoc(result, 0, &dMaxVal, 0, &ptMaxLoc); //寻找结果矩阵中的最大值
 
@@ -131,8 +131,8 @@ QtGrabWindow::~QtGrabWindow()
 void QtGrabWindow::paintEvent(QPaintEvent * e)
 {
 #if 1
-    LPCWSTR className = TEXT("UnityWndClass");
-    LPCWSTR winName = TEXT("IdleSpiral");
+    LPCWSTR className = TEXT("UnityWndClass");//UnrealWindow UnityWndClass
+    LPCWSTR winName = TEXT("IdleSpiral");//剑灵 IdleSpiral
 	HWND hwnd = FindWindow(className, winName);
 	// 截取全屏, 指定窗口Id进行截屏
 	// QPixmap pix = m_pScreen->grabWindow(QApplication::desktop()->winId());
@@ -141,10 +141,22 @@ void QtGrabWindow::paintEvent(QPaintEvent * e)
 
 #if GDI
 	QPixmap pix = QPixmap::fromImage(myGrabWindow((WId)hwnd,false));
+	if (!pix)
+	{
+		return;
+	}
 #else DXGI
 	QPixmap pix = QPixmap::fromImage(GetDesktopFrame());
 #endif //DXGI
 	resize(pix.size());
+
+	QImage img2 = pix.toImage();
+	// QImage --->Mat的转换
+	cv::Mat mat2 = cv::Mat(img2.height(), img2.width(), CV_8UC4, img2.bits(), img2.bytesPerLine());
+	//cv::Mat src_mat = cv::imdecode(pic_arr, cv::IMREAD_UNCHANGED);
+	cv::imshow("123", mat2);
+
+
 	//QPixmap pix = qApp->screens()[0]->grabWindow(0);
 	//QPixmap pix = m_pScreen->grabWindow((WId)hwnd);
 	//QPixmap pix = m_pScreen->grabWindow(this->winId());
@@ -169,8 +181,8 @@ QImage QtGrabWindow::myGrabWindow(WId winId, bool needMouse)
 	RECT r;        
 	GetClientRect(hwnd, &r);        
 	windowSize = QSize(r.right - r.left, r.bottom - r.top);        
-	int width = windowSize.width();        
-	int height = windowSize.height();         
+	int width = windowSize.width();
+	int height = windowSize.height();
 	HDC display_dc = GetDC(nullptr);        
 	HDC bitmap_dc = CreateCompatibleDC(display_dc);        
 	HBITMAP bitmap = CreateCompatibleBitmap(display_dc, width, height);        

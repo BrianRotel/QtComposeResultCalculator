@@ -112,6 +112,7 @@
     <None Include="QtComposeResultCalculator.ico" />
     <QtUic Include="QtGetWindowInfo.ui" />
     <QtUic Include="QtGrabWindow.ui" />
+    <QtUic Include="QtMyClipboard.ui" />
     <QtUic Include="QtSetCompose.ui" />
     <ResourceCompile Include="QtComposeResultCalculator.rc" />
     <QtMoc Include="QtSetCompose.h" />
@@ -124,11 +125,13 @@
     <ClInclude Include="DXGIDuplicator.h" />
     <QtMoc Include="QtCrosshairLabelClick.h" />
     <QtMoc Include="QtCrosshairLabelMove.h" />
+    <QtMoc Include="QtMyClipboard.h" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="QtCrosshairLabelMove.cpp" />
     <ClCompile Include="QtGetWindowInfo.cpp" />
     <ClCompile Include="QtGrabWindow.cpp" />
     <ClCompile Include="QtCrosshairLabelClick.cpp" />
+    <ClCompile Include="QtMyClipboard.cpp" />
     <ClCompile Include="QtMyDataBase.cpp" />
     <ClCompile Include="QtOpenCV_Worker.cpp" />
     <ClCompile Include="QtSetCompose.cpp" />

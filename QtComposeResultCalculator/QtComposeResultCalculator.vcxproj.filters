@@ -82,6 +82,9 @@
     <ClCompile Include="QtCrosshairLabelMove.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="QtMyClipboard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtSetCompose.ui">
@@ -94,6 +97,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="QtGrabWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="QtMyClipboard.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -120,6 +126,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="QtCrosshairLabelMove.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="QtMyClipboard.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
