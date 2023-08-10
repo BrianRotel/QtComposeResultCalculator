@@ -29,7 +29,7 @@ QtTestWidget::QtTestWidget(QWidget* parent)
 	isConnect = QObject::connect(ui.pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onPushButton2(bool)));
 	//doSomeThing();
 	//QMessageBox::warning(this, "源图像", "");
-	doSomeThing2();
+	//doSomeThing2();
 }
 
 QtTestWidget::~QtTestWidget()
