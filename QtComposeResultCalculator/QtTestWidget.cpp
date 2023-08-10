@@ -1,7 +1,16 @@
 ﻿#include "stdafx.h"
 #include "QtTestWidget.h"
 #include <QPainter>
-
+//grabcut算法
+bool setMouse = false;    //判断鼠标左键的状态（up / down）
+bool init;
+Point pt;
+Rect rect;
+Mat srcImg, gMask, bgModel, fgModel;
+int numRun = 0;
+void onMouse(int, int, int, int, void*);
+void runGrabCut();
+void showImage();
 QtTestWidget::QtTestWidget(QWidget* parent)
 	: QWidget(parent)
 {
@@ -9,18 +18,18 @@ QtTestWidget::QtTestWidget(QWidget* parent)
 	//图像边缘检测 -->自动抠图 
 	//重写鼠标移动事件,当鼠标在想要被扣的图标上的时候,调用封装好的opencv函数,进行鼠标区域的边缘检测,然后绘制出区域,再重写按键或者点击事件,将被抠图区域保存下来,最后存储到数据库中(由用户决定)
 #if 1
-	Mat_Image = imread("C:/Users/Administrator/Pictures/7fe3e008f1d04ba23003a550b777cff.png");
-	//Mat_Image = imread("C:/Users/Administrator/Pictures/20230805090436.png", IMREAD_GRAYSCALE);
 	Qt_Image.load("C:/Users/Administrator/Pictures/7fe3e008f1d04ba23003a550b777cff.png");
-	//创建一个背景遮罩
-	mMask = Mat::zeros(Mat_Image.size(), CV_8UC1);
-	mMask.setTo(Scalar::all(GC_BGD));
-	convert2Sence(Mat_Image);
 #endif
 	resize(Qt_Image.size());
-	//this->centralWidget()->setMouseTracking(true);
 	setMouseTracking(true);
-	ui.graphicsView->setScene(&scene);
+	myView = new QtMyGraphicsView(this);
+	ui.verticalLayout->insertWidget(0, myView);
+
+	bool isConnect = QObject::connect(ui.pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushButton(bool)));
+	isConnect = QObject::connect(ui.pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onPushButton2(bool)));
+	//doSomeThing();
+	//QMessageBox::warning(this, "源图像", "");
+	doSomeThing2();
 }
 
 QtTestWidget::~QtTestWidget()
@@ -58,14 +67,14 @@ void QtTestWidget::Transfer()
 void QtTestWidget::doSomeThing()
 {
 	//    get_outline(image);
-
+	Mat mImage = imread("C:/Users/Administrator/Pictures/7fe3e008f1d04ba23003a550b777cff.png", IMREAD_GRAYSCALE);
 	Mat kernel = getStructuringElement(MORPH_RECT, Size(3, 3));
 	Mat img_dilate, img_erode;
-	dilate(Mat_Image, img_dilate, kernel, Point(-1, -1), 3);
-	erode(Mat_Image, img_erode, kernel, Point(-1, -1), 3);
+	dilate(mImage, img_dilate, kernel, Point(-1, -1), 3);
+	erode(mImage, img_erode, kernel, Point(-1, -1), 3);
 
 	Mat laplacian;
-	Laplacian(Mat_Image, laplacian, CV_8U, 3);
+	Laplacian(mImage, laplacian, CV_8U, 3);
 	threshold(laplacian, laplacian, 127, 255, THRESH_BINARY | THRESH_OTSU);
 
 	std::vector<std::vector<Point>> contours;
@@ -75,181 +84,111 @@ void QtTestWidget::doSomeThing()
 	qDebug() << hierarchy.size();
 
 	//    Mat draw_img = Mat::zeros(image.size(), CV_8UC3);
-	Mat image1 = imread("C:/Users/Administrator/Pictures/20230805090436.png", IMREAD_COLOR);
+	Mat image1 = imread("C:/Users/Administrator/Pictures/7fe3e008f1d04ba23003a550b777cff.png", IMREAD_COLOR);
 	drawContours(image1, contours, -1, Scalar(0, 0, 255), 1);
 	imshow("Photo Boundaries", image1);
 
 	waitKey(0);
 }
-void QtTestWidget::mouseMoveEvent(QMouseEvent* event)
+void QtTestWidget::doSomeThing2()
 {
-	mRect = Rect(Point(mRect.x, mRect.y), Point(event->pos().x(), event->pos().y()));
-	qDebug() << "mouseMoveEvent:" << mRect.width << "|" << mRect.height;
-	showImage();
-}
-void QtTestWidget::mousePressEvent(QMouseEvent* event) {
-	grabMouse();
-	if (event->button() == Qt::LeftButton) {//鼠标左键
-		mRect.x = event->pos().x();
-		mRect.y = event->pos().y();
-		mRect.width = 1;
-		mRect.height = 1;
-		init = false;
-		numRun = 0;
-		qDebug() << "mousePressEvent:" << event->pos().x() << "|" << event->pos().y();
+	srcImg = imread("C:/Users/Administrator/Pictures/7fe3e008f1d04ba23003a550b777cff.png");
+	if (srcImg.empty())
+	{
+		printf("could not load image...\n");
 	}
-}
-void QtTestWidget::mouseReleaseEvent(QMouseEvent* event) {
-	releaseMouse();
-	if (event->button() == Qt::LeftButton) {//鼠标左键
-		if (mRect.width > 1 && mRect.height > 1) {
-			setROIMask();
-			qDebug() << "mouseReleaseEvent:" << mRect.width << "|" << mRect.height;
-			//执行grabcut的代码
+	std::string title = "src";
+	imshow(title, srcImg);
+
+	gMask.create(srcImg.size(), CV_8U);
+	setMouseCallback(title, onMouse, 0);
+
+	while (1)
+	{
+		char c = (char)waitKey(0);
+		if (c == ' ') {//选中矩形框后，按空格键执行grabcut分割
 			runGrabCut();
 			numRun++;
 			showImage();
+			printf("current iteative times : %d\n", numRun);
 		}
-
+		if ((int)c == 27) {
+			break;
+		}
+		//if (getWindowProperty(title, 0) == -1)
+		//{
+		//	break;
+		//}
 	}
-}
-void QtTestWidget::dropEvent(QDropEvent* event) {
-	QString filePath = event->mimeData()->urls().at(0).toLocalFile();
-	showCrabCutMatting(filePath.toStdString().c_str());
+	destroyAllWindows();
 }
 
-void QtTestWidget::showCrabCutMatting(const char* filePath) {
-	Mat_Image = imread(filePath);
-	if (Mat_Image.empty()) {
-		qDebug() << "输入图像为空";
-		return;
-	}
-
-	//创建一个背景遮罩
-	mMask = Mat::zeros(Mat_Image.size(), CV_8UC1);
-	mMask.setTo(Scalar::all(GC_BGD));
-	convert2Sence(Mat_Image);
-}
-
-QImage QtTestWidget::MatToImage(Mat& m) //Mat转QImage
+void showImage()
 {
-	//判断m的类型，可能是CV_8UC1  CV_8UC2  CV_8UC3  CV_8UC4
-	switch (m.type())
-	{ //QIamge 构造函数, ((const uchar *data, 宽(列),高(行), 一行共多少个（字节）通道，宽度*字节数，宏参数)
-	case CV_8UC1:
+	Mat result, binmask;
+	binmask = gMask & 1;				//进一步掩膜
+	if (init)						//进一步抠出无效区域。鼠标按下，init变为false
 	{
-		QImage img((uchar*)m.data, m.cols, m.rows, m.cols * 1, QImage::Format_Grayscale8);
-		return img;
+		srcImg.copyTo(result, binmask);
 	}
-	break;
-	case CV_8UC3:   //一个像素点由三个字节组成
+	else
 	{
-		//cvtColor(m,m,COLOR_BGR2RGB); BGR转RGB
-		QImage img((uchar*)m.data, m.cols, m.rows, m.cols * 3, QImage::Format_RGB888);
-		return img.rgbSwapped(); //opencv是BGR  Qt默认是RGB  所以RGB顺序转换
+		result = srcImg.clone();
 	}
-	break;
-	case CV_8UC4:
-	{
-		QImage img((uchar*)m.data, m.cols, m.rows, m.cols * 4, QImage::Format_RGBA8888);
-		return img;
-	}
-	break;
-	default:
-	{
-		QImage img; //如果遇到一个图片均不属于这三种，返回一个空的图片
-		return img;
-	}
-	}
+	rectangle(result, rect, Scalar(0, 0, 255), 2, 8);
+	imshow("源图像", result);
 }
-Mat QtTestWidget::ImageToMat(QImage& image) //QImage转Mat
+
+void onMouse(int events, int x, int y, int flag, void*)
 {
-	Mat mat = Mat::zeros(image.height(), image.width(), image.format()); //初始化Mat
-	switch (image.format()) //判断image的类型
-	{
-	case QImage::QImage::Format_Grayscale8:  //灰度图
-		mat = Mat(image.height(), image.width(),
-			CV_8UC1, (void*)image.constBits(), image.bytesPerLine());
-		break;
-	case QImage::Format_RGB888: //3通道彩色
-		mat = Mat(image.height(), image.width(),
-			CV_8UC3, (void*)image.constBits(), image.bytesPerLine());
-		break;
-	case QImage::Format_ARGB32: //4通道彩色
-		mat = Mat(image.height(), image.width(),
-			CV_8UC4, (void*)image.constBits(), image.bytesPerLine());
-		break;
-	default:
-		return mat;
-	}
-	return mat;
-}
-void QtTestWidget::convert2Sence(Mat target) {
-	scene.clear();
-	if (target.empty())
-	{
+	if (x < 0 || y < 0 || x > srcImg.cols || y > srcImg.rows)	//无效区域
 		return;
-	}
-	QImage image = MatToImage(target);
-	if (image.isNull())
+
+
+	if (events == EVENT_LBUTTONDOWN)
 	{
-		return;
+		setMouse = true;
+		pt.x = x;
+		pt.y = y;
+		init = false;
 	}
-	QPixmap pixmap = QPixmap::fromImage(image);
-	QGraphicsPixmapItem* item = new QGraphicsPixmapItem(pixmap.scaled(ui.graphicsView->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-	scene.addItem(item);
-}
-/**
- * 将选中的区域设置为前景
- * @brief CrabCut_Matting::setROIMask
- */
-void QtTestWidget::setROIMask() {
-	// GC_FGD = 1
-	// GC_BGD =0;
-	// GC_PR_FGD = 3
-	// GC_PR_BGD = 2
-	mMask.setTo(GC_BGD);
-	mRect.x = max(0, mRect.x);
-	mRect.y = max(0, mRect.y);
-	mRect.width = min(mRect.width, Mat_Image.cols - mRect.x);
-	mRect.height = min(mRect.height, Mat_Image.rows - mRect.y);
-	mMask(mRect).setTo(Scalar(GC_PR_FGD));//将选中的区域设置为
+	else if (events == EVENT_MOUSEMOVE)//鼠标只要动，就执行一次
+	{
+		if (setMouse == true)			//鼠标左键按住，滑动
+		{
+			Point pt1;
+			pt1.x = x;
+			pt1.y = y;
+			rect = Rect(pt, pt1);//定义矩形区域
+			showImage();
+			gMask.setTo(Scalar::all(GC_BGD));//背景
+			gMask(rect).setTo(Scalar(GC_PR_FGD));//前景			    //对rect内部设置为可能的前景，外部设置为背景
+		}
+	}
+	else if (events == EVENT_LBUTTONUP)
+		setMouse = false;	        	//鼠标左键抬起
 }
 
-void QtTestWidget::showImage() {
-	Mat result, binMask;
-	if (mMask.empty())
+void runGrabCut()
+{
+	if (init)//鼠标按下，init变为false
+		grabCut(srcImg, gMask, rect, bgModel, fgModel, 1);//第二次迭代，用gMask初始化grabcut
+	else
 	{
-		return;
-	}
-	binMask.create(mMask.size(), CV_8UC1);
-	binMask = mMask & 1;
-	if (init) {
-		Mat_Image.copyTo(result, binMask);
-	}
-	else {
-		Mat_Image.copyTo(result);
-	}
-	rectangle(result, mRect, Scalar(0, 0, 255), 2, 8);
-	convert2Sence(result);
-
-}
-
-
-void QtTestWidget::runGrabCut() {
-	if (mRect.width < 2 || mRect.height < 2) {
-		return;
-	}
-
-	if (init) {
-		grabCut(Mat_Image, mMask, mRect, bgModel, fgModel, 1);
-	}
-	else 
-	{
-		grabCut(Mat_Image, mMask, mRect, bgModel, fgModel, 1, GC_INIT_WITH_RECT);
+		grabCut(srcImg, gMask, rect, bgModel, fgModel, 1, GC_INIT_WITH_RECT);//用矩形窗初始化GrabCut
 		init = true;
 	}
 }
+void QtTestWidget::onPushButton(bool b)
+{
+
+}
+void QtTestWidget::onPushButton2(bool b)
+{
+
+}
+
+#ifdef SHOW_BACKGROUND
 void QtTestWidget::paintEvent(QPaintEvent* event)
 {
 	//Q_UNUSED(event)
@@ -257,6 +196,7 @@ void QtTestWidget::paintEvent(QPaintEvent* event)
 	//painter.setRenderHint(QPainter::Antialiasing);
 	//painter.drawPixmap(this->rect(), Qt_Image);
 }
+#endif
 
 
 
