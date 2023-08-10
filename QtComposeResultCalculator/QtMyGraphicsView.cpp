@@ -102,19 +102,29 @@ void QtMyGraphicsView::showImage() {
 }
 QImage QtMyGraphicsView::getImage()
 {
+
 	Mat result, binMask, outMask;
 	if (mMask.empty())
 	{
 		return QImage();
 	}
 	binMask.create(mMask.size(), CV_8UC1);
-	outMask.create(256,256, CV_8UC1);
+	//outMask.create(256,256, CV_8UC1);
 	binMask = mMask & 1;
-	outMask.setTo(GC_FGD);
+	//outMask.setTo(GC_FGD);
 
-	outMask = 0 | binMask;
-	
-#if 1
+	//outMask = 0 | binMask;
+#if 0
+
+	compare(mMask, GC_PR_FGD, outMask, CMP_EQ);  //取得可能标记为“可能属于前景”的像素
+	//std::string title = "src";
+	//imshow(title, mMask);
+	Mat foreground(Mat_Image.size(), CV_8UC3, Scalar(255, 255, 255));
+	//Mat_Image.copyTo(foreground, mMask);  //不复制背景像素
+	//title = "src1";
+	//imshow(title, foreground);
+#endif 
+#if 0
 	std::string title = "mMask";
 	imshow(title, mMask);//
 	imwrite("mMask.png", mMask);
@@ -126,15 +136,7 @@ QImage QtMyGraphicsView::getImage()
 	imwrite("outMask.png", outMask);
 #endif 
 
-#if 0
-	compare(mMask, GC_PR_FGD, mMask, CMP_EQ);  //取得可能标记为“可能属于前景”的像素
-	std::string title = "src";
-	imshow(title, mMask);
-	Mat foreground(Mat_Image.size(), CV_8UC3, Scalar(255, 255, 255));
-	Mat_Image.copyTo(foreground, mMask);  //不复制背景像素
-	title = "src1";
-	imshow(title, foreground);
-#endif 
+
 #if 0
 	for (size_t i = 0; i < mRect.width; i++)
 	{
@@ -160,6 +162,7 @@ QImage QtMyGraphicsView::getImage()
 #endif 
 
 #if 1
+	//[1] 选取区域扩大2倍,减少遍历图像的数量(原先截取区域遍历不全)
 	Rect nRect;
 	int scale_ratio = 2;
 	int xmin = mRect.x;
@@ -186,8 +189,12 @@ QImage QtMyGraphicsView::getImage()
 	nRect.y = ymin;
 	nRect.width = xmax - xmin;
 	nRect.height = ymax - ymin;
+	//[1]
+	//时间计算 选取区域计算比全图遍历节省70-80%的时间,用矩阵应该会更快  小图标截取大约耗时 1~2ms
 	QElapsedTimer e;
 	e.start();
+
+	//计算最小图像位置
 	int mW = 0;
 	int mH = 0;
 	int mX = 0;
@@ -224,24 +231,24 @@ QImage QtMyGraphicsView::getImage()
 		}
 	}
 
-	qDebug() << "mW" << mW;
-	qDebug() << "mH" << mH;
-	qDebug() << "mRectW" << mRect.width;
-	qDebug() << "mRectH" << mRect.height;
-	qDebug() << "nRectW" << nRect.width;
-	qDebug() << "nRectH" << nRect.height;
-	qDebug() << "mRecttl" << mRect.tl().x << mRect.tl().y;
-	qDebug() << "mRectbr" << mRect.br().x << mRect.br().y;
-	qDebug() << "nRecttl" << nRect.tl().x << nRect.tl().y;
-	qDebug() << "nRectbr" << nRect.br().x << nRect.br().y;
-	qDebug() << "time" << (double)e.nsecsElapsed() / (double)1000000;
+	//qDebug() << "mW" << mW;
+	//qDebug() << "mH" << mH;
+	//qDebug() << "mRectW" << mRect.width;
+	//qDebug() << "mRectH" << mRect.height;
+	//qDebug() << "nRectW" << nRect.width;
+	//qDebug() << "nRectH" << nRect.height;
+	//qDebug() << "mRecttl" << mRect.tl().x << mRect.tl().y;
+	//qDebug() << "mRectbr" << mRect.br().x << mRect.br().y;
+	//qDebug() << "nRecttl" << nRect.tl().x << nRect.tl().y;
+	//qDebug() << "nRectbr" << nRect.br().x << nRect.br().y;
+	//qDebug() << "time" << (double)e.nsecsElapsed() / (double)1000000;
 #endif // 0
 
 
 	Mat_Image.copyTo(result, binMask);
 
 #if 1
-	//binMask.setTo(1, binMask = GC_BGD);
+
 	Rect gRect;
 	gRect.x = mY;
 	gRect.y = mX;
@@ -250,10 +257,8 @@ QImage QtMyGraphicsView::getImage()
 
 	Mat cropped_image = result(gRect);
 	//display image
-	imshow(" Original Image", cropped_image);
-	//imwrite("1.png", result);
-	imwrite("cropped.png", cropped_image);
-	//Mat res(result,mRect);
+	//imshow(" Original Image", cropped_image);
+	//imwrite("cropped.png", cropped_image);
 #endif 
 
 
