@@ -3,6 +3,7 @@
 #include "QtGetWindowInfo.h"
 #include "QtGrabWindow.h"
 #include "QtMyClipboard.h"
+#include "QtTestWidget.h"
 #include <QtWidgets/QApplication>
 #include <QScreen>
 
@@ -36,6 +37,7 @@ int main(int argc, char *argv[])
     //c.show();
     //QtMyClipboard d;
     //d.show();
-
+    QtTestWidget e;
+    e.show();
     return a.exec();
 }
