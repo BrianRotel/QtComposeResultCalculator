@@ -114,14 +114,16 @@ QImage QtMyGraphicsView::getImage()
 	//outMask.setTo(GC_FGD);
 
 	//outMask = 0 | binMask;
-#if 0
+#if 1
 
 	compare(mMask, GC_PR_FGD, outMask, CMP_EQ);  //取得可能标记为“可能属于前景”的像素
-	//std::string title = "src";
+	//std::string title = "mMask";
 	//imshow(title, mMask);
+	//title = "outMask";
+	//imshow(title, outMask);
 	Mat foreground(Mat_Image.size(), CV_8UC3, Scalar(255, 255, 255));
-	//Mat_Image.copyTo(foreground, mMask);  //不复制背景像素
-	//title = "src1";
+	//Mat_Image.copyTo(foreground, outMask);  //不复制背景像素
+	//title = "foreground";
 	//imshow(title, foreground);
 #endif 
 #if 0
@@ -207,7 +209,7 @@ QImage QtMyGraphicsView::getImage()
 		for (size_t j = 0; j < nRect.height; j++)
 		{
 			//qDebug() << format(mMask, cv::Formatter::FMT_DEFAULT);
-			if (static_cast<int>(binMask.at<uchar>(i + nRect.x, j + nRect.y)))
+			if (static_cast<int>(outMask.at<uchar>(i + nRect.x, j + nRect.y)))
 			{
 				++sH;
 				mH = std::max(mH, sH);
@@ -245,7 +247,8 @@ QImage QtMyGraphicsView::getImage()
 #endif // 0
 
 
-	Mat_Image.copyTo(result, binMask);
+	//Mat_Image.copyTo(result, binMask);
+	Mat_Image.copyTo(foreground, outMask);
 
 #if 1
 
@@ -255,14 +258,15 @@ QImage QtMyGraphicsView::getImage()
 	gRect.width = mH;
 	gRect.height = mW;
 
-	Mat cropped_image = result(gRect);
+	Mat cropped_image = foreground(gRect);
 	//display image
-	//imshow(" Original Image", cropped_image);
+	//imshow("foreground", foreground);
+	//imshow("cropped_image", cropped_image);
 	//imwrite("cropped.png", cropped_image);
 #endif 
 
 
-	return MatToImage(result);
+	return MatToImage(cropped_image);
 }
 void QtMyGraphicsView::convert2Sence(Mat target) {
 	scene.clear();
@@ -332,9 +336,13 @@ QImage QtMyGraphicsView::MatToImage(Mat& m) //Mat转QImage
 	break;
 	case CV_8UC3:   //一个像素点由三个字节组成
 	{
+		const uchar* pSrc = (const uchar*)m.data;
+		QImage image(pSrc, m.cols, m.rows, m.step, QImage::Format_RGB888);
+
+		return image.rgbSwapped();
 		//cvtColor(m,m,COLOR_BGR2RGB); BGR转RGB
-		QImage img((uchar*)m.data, m.cols, m.rows, m.cols * 3, QImage::Format_RGB888);
-		return img.rgbSwapped(); //opencv是BGR  Qt默认是RGB  所以RGB顺序转换
+		//QImage img((uchar*)m.data, m.cols, m.rows, m.cols * 3, QImage::Format_RGB888);
+		//return img.rgbSwapped(); //opencv是BGR  Qt默认是RGB  所以RGB顺序转换
 	}
 	break;
 	case CV_8UC4:
@@ -350,6 +358,7 @@ QImage QtMyGraphicsView::MatToImage(Mat& m) //Mat转QImage
 	}
 	}
 }
+
 Mat QtMyGraphicsView::ImageToMat(QImage& image) //QImage转Mat
 {
 	Mat mat = Mat::zeros(image.height(), image.width(), image.format()); //初始化Mat
@@ -372,5 +381,66 @@ Mat QtMyGraphicsView::ImageToMat(QImage& image) //QImage转Mat
 	}
 	return mat;
 }
+QImage QtMyGraphicsView::cvMatToQImage(const cv::Mat& mat)
+{
+	switch (mat.type()) {
+	case CV_8UC1: {
+		QImage image(mat.cols, mat.rows, QImage::Format_Indexed8);
 
+		image.setColorCount(256);
+		for (int i = 0; i < 256; i++) {
+			image.setColor(i, qRgb(i, i, i));
+		}
+
+		uchar* pSrc = mat.data;
+		for (int row = 0; row < mat.rows; row++) {
+			uchar* pDest = image.scanLine(row);
+			memcpy(pDest, pSrc, mat.cols);
+			pSrc += mat.step;
+		}
+
+		return image;
+	}
+				break;
+	case CV_8UC3: {
+		const uchar* pSrc = (const uchar*)mat.data;
+		QImage image(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+
+		return image.rgbSwapped();
+	}
+				break;
+	case CV_8UC4: {
+		const uchar* pSrc = (const uchar*)mat.data;
+		QImage image(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_ARGB32);
+
+		return image.copy();
+	}
+				break;
+	default:
+		break;
+	}
+
+	return QImage();
+}
+cv::Mat QtMyGraphicsView::QImageTocvMat(const QImage& image)
+{
+	cv::Mat mat;
+	switch (image.format())
+	{
+	case QImage::Format_Grayscale8: //灰度图，每个像素点1个字节（8位）
+	case QImage::Format_Indexed8: //Mat构造：行数，列数，存储结构，数据，step每行多少字节
+		mat = cv::Mat(image.height(), image.width(), CV_8UC1, (void*)image.constBits(), image.bytesPerLine());
+		break;
+	case QImage::Format_ARGB32:
+	case QImage::Format_RGB32:
+	case QImage::Format_ARGB32_Premultiplied:
+		mat = cv::Mat(image.height(), image.width(), CV_8UC4, (void*)image.constBits(), image.bytesPerLine());
+		break;
+	case QImage::Format_RGB888: //RR,GG,BB字节顺序存储
+		mat = cv::Mat(image.height(), image.width(), CV_8UC3, (void*)image.constBits(), image.bytesPerLine());
+		cv::cvtColor(mat, mat, cv::COLOR_RGB2BGR); //opencv需要转为BGR的字节顺序
+		break;
+	}
+	return mat;
+}
 
