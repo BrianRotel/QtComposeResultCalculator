@@ -21,8 +21,9 @@ protected:
 
 	void setROIMask();
 	void showImage();
-	void runGrabCut();
+	QImage getImage();
 	void convert2Sence(Mat target);
+	void runGrabCut();
 
 	QImage MatToImage(Mat& m);
 	Mat ImageToMat(QImage& image);
@@ -30,6 +31,8 @@ protected:
 	void dropEvent(QDropEvent* event);
 	void showCrabCutMatting(const char* filePath);
 #endif
+public slots:
+	QImage getGrabImage();
 private:
 	Ui::QtMyGraphicsViewClass ui;
 

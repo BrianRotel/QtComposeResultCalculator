@@ -19,6 +19,8 @@ private slots:
 	void onPushButton1(bool b);
 #endif
 	void onPushButton2(bool b);
+public slots:
+	void setImage(QImage img);
 private:
 	Ui::QtMyClipboardClass ui;
 };

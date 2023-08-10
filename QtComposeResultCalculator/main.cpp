@@ -39,9 +39,9 @@ int main(int argc, char *argv[])
     //c.show();
     //QtMyClipboard d;
     //d.show();
-    //QtTestWidget e;
-    //e.show();
-    QtMyGraphicsView f;
-    f.show();
+    QtTestWidget e;
+    e.show();
+    //QtMyGraphicsView f;
+    //f.show();
     return a.exec();
 }

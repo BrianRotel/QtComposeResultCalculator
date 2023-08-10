@@ -2,6 +2,7 @@
 #include <QWidget>
 #include "ui_QtTestWidget.h"
 #include "QtMyGraphicsView.h"
+#include "QtMyClipboard.h"
 
 class QtTestWidget : public QWidget
 {
@@ -31,4 +32,5 @@ private:
 
 	QPixmap Qt_Image;
 	QtMyGraphicsView* myView;
+	QtMyClipboard myClip;
 };

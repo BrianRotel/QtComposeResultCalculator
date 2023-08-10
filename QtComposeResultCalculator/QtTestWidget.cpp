@@ -182,7 +182,9 @@ void runGrabCut()
 }
 void QtTestWidget::onPushButton(bool b)
 {
-
+	myClip.show();
+	QImage img = myView->getGrabImage();
+	myClip.setImage(img);
 }
 void QtTestWidget::onPushButton2(bool b)
 {

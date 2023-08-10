@@ -84,3 +84,13 @@ void QtMyClipboard::onPushButton2(bool b)
         //ui.textEdit->insertFromMimeData(mimeData);
     }
 }
+
+void QtMyClipboard::setImage(QImage img)
+{
+    if (!img.isNull())
+    {
+        QTextDocument* textDocument1 = ui.textEdit->document();
+        textDocument1->addResource(QTextDocument::ImageResource, QUrl("name"), QVariant(img));
+        ui.textEdit->textCursor().insertImage("name");
+    }
+}

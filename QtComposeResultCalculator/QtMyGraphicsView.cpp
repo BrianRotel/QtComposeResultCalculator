@@ -18,6 +18,9 @@ QtMyGraphicsView::QtMyGraphicsView(QWidget *parent)
 	setFixedSize(Mat_Image.cols, Mat_Image.rows);
 	init = false;
 	isPress = false;
+	showImage();
+	//std::string title = "src";
+	//imshow(title, mMask);
 }
 
 QtMyGraphicsView::~QtMyGraphicsView()
@@ -59,7 +62,7 @@ void QtMyGraphicsView::mouseReleaseEvent(QMouseEvent* event) {
 			//执行grabcut的代码
 			//runGrabCut();
 			numRun++;
-			showImage();
+			//showImage();
 		}
 
 	}
@@ -71,33 +74,42 @@ void QtMyGraphicsView::mouseReleaseEvent(QMouseEvent* event) {
  */
 void QtMyGraphicsView::setROIMask() {
 	mMask.setTo(GC_BGD);
+	//std::string title = "src1";
+	//imshow(title, mMask);
 	mRect.x = max(0, mRect.x);
 	mRect.y = max(0, mRect.y);
 	mRect.width = min(mRect.width, Mat_Image.cols - mRect.x);
 	mRect.height = min(mRect.height, Mat_Image.rows - mRect.y);
 	mMask(mRect).setTo(Scalar(GC_PR_FGD));//将选中的区域设置为
+	//title = "src2";
+	//imshow(title, mMask);
 }
 
 void QtMyGraphicsView::showImage() {
-	Mat result, binMask;
+	Mat result;
 	if (mMask.empty())
 	{
 		return;
 	}
-	binMask.create(mMask.size(), CV_8UC1);
-	binMask = mMask & 1;
-	if (init) {
-		Mat_Image.copyTo(result, binMask);
-	}
-	else {
-		Mat_Image.copyTo(result);
-	}
+	Mat_Image.copyTo(result);
 	//绘制矩形,图像,矩形,颜色,线宽,样式
 	if (mRect.width > 1 && mRect.height > 1) {
 		rectangle(result, mRect, Scalar(0, 0, 255), 2, 8);
 	}
 	convert2Sence(result);
 
+}
+QImage QtMyGraphicsView::getImage()
+{
+	Mat result, binMask;
+	if (mMask.empty())
+	{
+		return QImage();
+	}
+	binMask.create(mMask.size(), CV_8UC1);
+	binMask = mMask & 1;
+	Mat_Image.copyTo(result, binMask);
+	return MatToImage(result);
 }
 void QtMyGraphicsView::convert2Sence(Mat target) {
 	scene.clear();
@@ -127,6 +139,11 @@ void QtMyGraphicsView::runGrabCut() {
 		grabCut(Mat_Image, mMask, mRect, bgModel, fgModel, 1, GC_INIT_WITH_RECT);
 		init = true;
 	}
+}
+QImage QtMyGraphicsView::getGrabImage()
+{
+	runGrabCut();
+	return getImage();
 }
 
 #ifdef DROP_IMAGE
