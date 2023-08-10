@@ -136,7 +136,8 @@ void showImage()
 		result = srcImg.clone();
 	}
 	rectangle(result, rect, Scalar(0, 0, 255), 2, 8);
-	imshow("源图像", result);
+	std::string title = "src";
+	imshow(title, result);
 }
 
 void onMouse(int events, int x, int y, int flag, void*)

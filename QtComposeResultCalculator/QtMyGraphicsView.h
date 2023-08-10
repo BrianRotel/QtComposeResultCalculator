@@ -16,8 +16,8 @@ public:
 protected:
 
 	void mouseMoveEvent(QMouseEvent* event) override;
-	void mousePressEvent(QMouseEvent* event);
-	void mouseReleaseEvent(QMouseEvent* event);
+	void mousePressEvent(QMouseEvent* event) override;
+	void mouseReleaseEvent(QMouseEvent* event) override;
 
 	void setROIMask();
 	void showImage();
@@ -35,6 +35,7 @@ private:
 
 	int numRun;
 	bool init;
+	bool isPress;
 	Rect mRect;
 	Mat mMask;
 	Mat Mat_Image;

@@ -6,13 +6,18 @@ QtMyGraphicsView::QtMyGraphicsView(QWidget *parent)
 {
 	ui.setupUi(this);
 	setMouseTracking(true);
+	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 	Mat_Image = imread("C:/Users/Administrator/Pictures/7fe3e008f1d04ba23003a550b777cff.png");
 	mMask = Mat::zeros(Mat_Image.size(), CV_8UC1);
 	mMask.setTo(Scalar::all(GC_BGD));
 	convert2Sence(Mat_Image);
 	this->setScene(&scene);
-	resize(Mat_Image.rows, Mat_Image.cols);
+	//resize(Mat_Image.cols, Mat_Image.rows);
+	setFixedSize(Mat_Image.cols, Mat_Image.rows);
+	init = false;
+	isPress = false;
 }
 
 QtMyGraphicsView::~QtMyGraphicsView()
@@ -20,12 +25,16 @@ QtMyGraphicsView::~QtMyGraphicsView()
 
 void QtMyGraphicsView::mouseMoveEvent(QMouseEvent* event)
 {
-	mRect = Rect(Point(mRect.x, mRect.y), Point(event->pos().x(), event->pos().y()));
+	if (isPress)
+	{
+		mRect = Rect(Point(mRect.x, mRect.y), Point(event->pos().x(), event->pos().y()));
+	}
 	qDebug() << "mouseMoveEvent:" << mRect.tl().x << "," << mRect.tl().y << "|" << mRect.br().x << "," << mRect.br().y;
 	showImage();
 }
 void QtMyGraphicsView::mousePressEvent(QMouseEvent* event) {
-	//grabMouse();
+	//this->grabMouse(Qt::CrossCursor);
+	this->setCursor(Qt::CrossCursor);
 	if (event->button() == Qt::LeftButton) {//鼠标左键
 		QPoint globalPos(event->globalPos());
 		QPoint localPos(this->mapFromGlobal(globalPos));
@@ -34,20 +43,23 @@ void QtMyGraphicsView::mousePressEvent(QMouseEvent* event) {
 		mRect.width = 1;
 		mRect.height = 1;
 		init = false;
+		isPress = true;
 		numRun = 0;
 		qDebug() << "mousePressEvent:" << event->pos().x() << "|" << event->pos().y();
 	}
 }
 void QtMyGraphicsView::mouseReleaseEvent(QMouseEvent* event) {
-	//releaseMouse();
+	//this->releaseMouse();
+	this->unsetCursor();
 	if (event->button() == Qt::LeftButton) {//鼠标左键
+		isPress = false;
 		if (mRect.width > 1 && mRect.height > 1) {
 			setROIMask();
 			qDebug() << "mouseReleaseEvent:" << mRect.width << "|" << mRect.height;
 			//执行grabcut的代码
 			//runGrabCut();
-			//numRun++;
-			//showImage();
+			numRun++;
+			showImage();
 		}
 
 	}
@@ -81,7 +93,9 @@ void QtMyGraphicsView::showImage() {
 		Mat_Image.copyTo(result);
 	}
 	//绘制矩形,图像,矩形,颜色,线宽,样式
-	rectangle(result, mRect, Scalar(0, 0, 255), 2, 8);
+	if (mRect.width > 1 && mRect.height > 1) {
+		rectangle(result, mRect, Scalar(0, 0, 255), 2, 8);
+	}
 	convert2Sence(result);
 
 }

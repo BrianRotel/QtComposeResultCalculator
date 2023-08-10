@@ -4,6 +4,8 @@
 #include "QtGrabWindow.h"
 #include "QtMyClipboard.h"
 #include "QtTestWidget.h"
+#include "QtMyGraphicsView.h"
+
 #include <QtWidgets/QApplication>
 #include <QScreen>
 
@@ -37,7 +39,9 @@ int main(int argc, char *argv[])
     //c.show();
     //QtMyClipboard d;
     //d.show();
-    QtTestWidget e;
-    e.show();
+    //QtTestWidget e;
+    //e.show();
+    QtMyGraphicsView f;
+    f.show();
     return a.exec();
 }
