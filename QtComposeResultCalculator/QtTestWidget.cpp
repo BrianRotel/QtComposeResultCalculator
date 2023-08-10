@@ -135,6 +135,7 @@ void showImage()
 	{
 		result = srcImg.clone();
 	}
+
 	rectangle(result, rect, Scalar(0, 0, 255), 2, 8);
 	std::string title = "src";
 	imshow(title, result);

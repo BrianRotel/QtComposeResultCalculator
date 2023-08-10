@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "QtMyGraphicsView.h"
+#include <QElapsedTimer>
 
 QtMyGraphicsView::QtMyGraphicsView(QWidget *parent)
 	: QGraphicsView(parent)
@@ -101,14 +102,161 @@ void QtMyGraphicsView::showImage() {
 }
 QImage QtMyGraphicsView::getImage()
 {
-	Mat result, binMask;
+	Mat result, binMask, outMask;
 	if (mMask.empty())
 	{
 		return QImage();
 	}
 	binMask.create(mMask.size(), CV_8UC1);
+	outMask.create(256,256, CV_8UC1);
 	binMask = mMask & 1;
+	outMask.setTo(GC_FGD);
+
+	outMask = 0 | binMask;
+	
+#if 1
+	std::string title = "mMask";
+	imshow(title, mMask);//
+	imwrite("mMask.png", mMask);
+	title = "binMask";
+	imshow(title, binMask);
+	imwrite("binMask.png", binMask);
+	title = "outMask";
+	imshow(title, outMask);
+	imwrite("outMask.png", outMask);
+#endif 
+
+#if 0
+	compare(mMask, GC_PR_FGD, mMask, CMP_EQ);  //取得可能标记为“可能属于前景”的像素
+	std::string title = "src";
+	imshow(title, mMask);
+	Mat foreground(Mat_Image.size(), CV_8UC3, Scalar(255, 255, 255));
+	Mat_Image.copyTo(foreground, mMask);  //不复制背景像素
+	title = "src1";
+	imshow(title, foreground);
+#endif 
+#if 0
+	for (size_t i = 0; i < mRect.width; i++)
+	{
+		QStringList l;
+		for (size_t j = 0; j < mRect.height; j++)
+		{
+			//qDebug() << format(mMask, cv::Formatter::FMT_DEFAULT);
+			l.append(QString::number(static_cast<int>(mMask.at<uchar>(i + mRect.x, j + mRect.y))));
+		}
+		qDebug() << l ;
+	}
+	qDebug() << "--------------------------------------------------------------------";
+	for (size_t i = 0; i < mRect.width; i++)
+	{
+		QStringList l;
+		for (size_t j = 0; j < mRect.height; j++)
+		{
+			//qDebug() << format(mMask, cv::Formatter::FMT_DEFAULT);
+			l.append(QString::number(static_cast<int>(binMask.at<uchar>(i + mRect.x, j + mRect.y))));
+		}
+		qDebug() << l;
+	}
+#endif 
+
+#if 1
+	Rect nRect;
+	int scale_ratio = 2;
+	int xmin = mRect.x;
+	int xmax = mRect.x + mRect.width;
+	int ymin = mRect.y;
+	int ymax = mRect.y + mRect.height;
+
+	int x = (xmin + xmax) / 2;
+	int y = (ymin + ymax) / 2;
+	int w = (xmax - xmin) * scale_ratio;
+	int h = (ymax - ymin) * scale_ratio;
+	//# new xmin, ymin, xmax and ymax
+	xmin = x - w / 2;
+	xmax = x + w / 2;
+	ymin = y - h / 2;
+	ymax = y + h / 2;
+	// 大小修正
+	xmin = max(0, int(xmin));
+	ymin = max(0, int(ymin));
+	xmax = min(Mat_Image.rows, int(xmax));
+	ymax = min(Mat_Image.cols, int(ymax));
+
+	nRect.x = xmin;
+	nRect.y = ymin;
+	nRect.width = xmax - xmin;
+	nRect.height = ymax - ymin;
+	QElapsedTimer e;
+	e.start();
+	int mW = 0;
+	int mH = 0;
+	int mX = 0;
+	int mY = 0;
+	bool isF = true;
+	for (size_t i = 0; i < nRect.width; i++)
+	{
+		int sH = 0;
+		bool havO = false;
+		for (size_t j = 0; j < nRect.height; j++)
+		{
+			//qDebug() << format(mMask, cv::Formatter::FMT_DEFAULT);
+			if (static_cast<int>(binMask.at<uchar>(i + nRect.x, j + nRect.y)))
+			{
+				++sH;
+				mH = std::max(mH, sH);
+				if (isF)
+				{
+					mX = static_cast<int>(i + nRect.x);
+					mY = static_cast<int>(j + nRect.y);
+					isF = false;
+				}
+				mX = std::min(mX, static_cast<int>(i + nRect.x));
+				mY = std::min(mY, static_cast<int>(j + nRect.y));
+				if (!havO)
+				{
+					havO = true;
+				}
+			}
+		}
+		if (havO)
+		{
+			mW++;
+		}
+	}
+
+	qDebug() << "mW" << mW;
+	qDebug() << "mH" << mH;
+	qDebug() << "mRectW" << mRect.width;
+	qDebug() << "mRectH" << mRect.height;
+	qDebug() << "nRectW" << nRect.width;
+	qDebug() << "nRectH" << nRect.height;
+	qDebug() << "mRecttl" << mRect.tl().x << mRect.tl().y;
+	qDebug() << "mRectbr" << mRect.br().x << mRect.br().y;
+	qDebug() << "nRecttl" << nRect.tl().x << nRect.tl().y;
+	qDebug() << "nRectbr" << nRect.br().x << nRect.br().y;
+	qDebug() << "time" << (double)e.nsecsElapsed() / (double)1000000;
+#endif // 0
+
+
 	Mat_Image.copyTo(result, binMask);
+
+#if 1
+	//binMask.setTo(1, binMask = GC_BGD);
+	Rect gRect;
+	gRect.x = mY;
+	gRect.y = mX;
+	gRect.width = mH;
+	gRect.height = mW;
+
+	Mat cropped_image = result(gRect);
+	//display image
+	imshow(" Original Image", cropped_image);
+	//imwrite("1.png", result);
+	imwrite("cropped.png", cropped_image);
+	//Mat res(result,mRect);
+#endif 
+
+
 	return MatToImage(result);
 }
 void QtMyGraphicsView::convert2Sence(Mat target) {
