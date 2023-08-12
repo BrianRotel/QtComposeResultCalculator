@@ -11,12 +11,13 @@ QtMyGraphicsView::QtMyGraphicsView(QWidget *parent)
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 	Mat_Image = imread("C:/Users/Administrator/Pictures/7fe3e008f1d04ba23003a550b777cff.png");
+
 	mMask = Mat::zeros(Mat_Image.size(), CV_8UC1);
 	mMask.setTo(Scalar::all(GC_BGD));
 	convert2Sence(Mat_Image);
 	this->setScene(&scene);
 	//resize(Mat_Image.cols, Mat_Image.rows);
-	setFixedSize(Mat_Image.cols, Mat_Image.rows);
+	setFixedSize(getSourceImgWidth(), getSourceImgHeight());
 	init = false;
 	isPress = false;
 	showImage();
@@ -32,8 +33,8 @@ void QtMyGraphicsView::mouseMoveEvent(QMouseEvent* event)
 	if (isPress)
 	{
 		mRect = Rect(Point(mRect.x, mRect.y), Point(event->pos().x(), event->pos().y()));
+		qDebug() << "mouseMoveEvent:" << mRect.tl().x << "," << mRect.tl().y << "|" << mRect.br().x << "," << mRect.br().y;
 	}
-	qDebug() << "mouseMoveEvent:" << mRect.tl().x << "," << mRect.tl().y << "|" << mRect.br().x << "," << mRect.br().y;
 	showImage();
 }
 void QtMyGraphicsView::mousePressEvent(QMouseEvent* event) {
@@ -164,33 +165,7 @@ QImage QtMyGraphicsView::getImage()
 #endif 
 
 #if 1
-	//[1] 选取区域扩大2倍,减少遍历图像的数量(原先截取区域遍历不全)
-	Rect nRect;
-	int scale_ratio = 2;
-	int xmin = mRect.x;
-	int xmax = mRect.x + mRect.width;
-	int ymin = mRect.y;
-	int ymax = mRect.y + mRect.height;
-
-	int x = (xmin + xmax) / 2;
-	int y = (ymin + ymax) / 2;
-	int w = (xmax - xmin) * scale_ratio;
-	int h = (ymax - ymin) * scale_ratio;
-	//# new xmin, ymin, xmax and ymax
-	xmin = x - w / 2;
-	xmax = x + w / 2;
-	ymin = y - h / 2;
-	ymax = y + h / 2;
-	// 大小修正
-	xmin = max(0, int(xmin));
-	ymin = max(0, int(ymin));
-	xmax = min(Mat_Image.rows, int(xmax));
-	ymax = min(Mat_Image.cols, int(ymax));
-
-	nRect.x = xmin;
-	nRect.y = ymin;
-	nRect.width = xmax - xmin;
-	nRect.height = ymax - ymin;
+	Rect nRect = expandRect(2);
 	//[1]
 	//时间计算 选取区域计算比全图遍历节省70-80%的时间,用矩阵应该会更快  小图标截取大约耗时 1~2ms
 	QElapsedTimer e;
@@ -209,7 +184,7 @@ QImage QtMyGraphicsView::getImage()
 		for (size_t j = 0; j < nRect.height; j++)
 		{
 			//qDebug() << format(mMask, cv::Formatter::FMT_DEFAULT);
-			if (static_cast<int>(outMask.at<uchar>(i + nRect.x, j + nRect.y)))
+			if (static_cast<int>(outMask.at<uchar>(j + nRect.y, i+nRect.x)))
 			{
 				++sH;
 				mH = std::max(mH, sH);
@@ -243,22 +218,27 @@ QImage QtMyGraphicsView::getImage()
 	//qDebug() << "mRectbr" << mRect.br().x << mRect.br().y;
 	//qDebug() << "nRecttl" << nRect.tl().x << nRect.tl().y;
 	//qDebug() << "nRectbr" << nRect.br().x << nRect.br().y;
-	//qDebug() << "time" << (double)e.nsecsElapsed() / (double)1000000;
+	qDebug() << "time" << e.nsecsElapsed() / (float)1000 << "microsecond";
 #endif // 0
 
 
-	//Mat_Image.copyTo(result, binMask);
+	//Mat_Image.copyTo(result, outMask);
 	Mat_Image.copyTo(foreground, outMask);
 
 #if 1
 
 	Rect gRect;
-	gRect.x = mY;
-	gRect.y = mX;
-	gRect.width = mH;
-	gRect.height = mW;
+	gRect.x = mX;
+	gRect.y = mY;
+	gRect.width = mW;
+	gRect.height = mH;
+	qDebug() << "mX" << mX;
+	qDebug() << "mY" << mY;
+	qDebug() << "mH" << mH;
+	qDebug() << "mW" << mW;
 
 	Mat cropped_image = foreground(gRect);
+
 	//display image
 	//imshow("foreground", foreground);
 	//imshow("cropped_image", cropped_image);
@@ -267,6 +247,44 @@ QImage QtMyGraphicsView::getImage()
 
 
 	return MatToImage(cropped_image);
+}
+cv::Rect QtMyGraphicsView::expandRect(float multiple) {
+
+	//[1] 选取区域扩大2倍,减少遍历图像的数量(原先截取区域遍历不全)
+	Rect nRect;
+	if (multiple < 0.1)
+	{
+		return nRect;
+	}
+	int xmin = mRect.x;
+	int xmax = mRect.x + mRect.width;
+	int ymin = mRect.y;
+	int ymax = mRect.y + mRect.height;
+
+	//中心点
+	int x = (xmin + xmax) / 2;
+	int y = (ymin + ymax) / 2;
+	//扩增后的宽高
+	int w = (xmax - xmin) * multiple;
+	int h = (ymax - ymin) * multiple;
+
+	//# new xmin, ymin, xmax and ymax
+	xmin = x - w / 2;
+	xmax = x + w / 2;
+	ymin = y - h / 2;
+	ymax = y + h / 2;
+
+	// 大小修正
+	xmin = max(0, int(xmin));
+	ymin = max(0, int(ymin));
+	xmax = min(getSourceImgWidth(), size_t(xmax));
+	ymax = min(getSourceImgHeight(), size_t(ymax));
+
+	nRect.x = xmin;
+	nRect.y = ymin;
+	nRect.width = xmax - xmin;
+	nRect.height = ymax - ymin;
+	return nRect;
 }
 void QtMyGraphicsView::convert2Sence(Mat target) {
 	scene.clear();

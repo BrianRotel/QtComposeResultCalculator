@@ -56,13 +56,19 @@ public:
 	QImage CopyDesktopImage(ID3D11Texture2D* texture);//DXGI
 #endif // DXGI
 	void timerEvent(QTimerEvent * e);
+private slots:
+	void slotTimer();
 
 private:
 	Ui::QtGrabWindowClass ui;
-	QScreen * m_pScreen = nullptr;
-	QWindow * calcWin;
-	QWidget * calcWidget;
-	QWidget * owidget;
+	QScreen* m_pScreen = nullptr;
+	QWindow* calcWin;
+	QWidget* calcWidget;
+	QWidget* owidget;
+	QTimer* timer;
+	LPCWSTR className;
+	LPCWSTR winName;
+	HWND hwnd;
 private:
 
 #ifdef DXGI_TEST

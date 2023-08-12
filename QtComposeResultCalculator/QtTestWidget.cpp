@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "QtTestWidget.h"
 #include <QPainter>
+#include <QElapsedTimer>
 //grabcut算法
 bool setMouse = false;    //判断鼠标左键的状态（up / down）
 bool init;
@@ -27,9 +28,9 @@ QtTestWidget::QtTestWidget(QWidget* parent)
 
 	bool isConnect = QObject::connect(ui.pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushButton(bool)));
 	isConnect = QObject::connect(ui.pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onPushButton2(bool)));
-	//doSomeThing();
+	//doSomeThing();//边缘检测
 	//QMessageBox::warning(this, "源图像", "");
-	//doSomeThing2();
+	//doSomeThing2();//区域选图检测
 }
 
 QtTestWidget::~QtTestWidget()
@@ -184,7 +185,10 @@ void runGrabCut()
 void QtTestWidget::onPushButton(bool b)
 {
 	myClip.show();
+	QElapsedTimer e;
+	e.start();
 	QImage img = myView->getGrabImage();
+	qDebug() << "GrabImageTime" << e.elapsed();
 	myClip.setImage(img);
 }
 void QtTestWidget::onPushButton2(bool b)

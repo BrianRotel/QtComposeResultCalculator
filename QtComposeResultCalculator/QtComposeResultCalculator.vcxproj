@@ -55,10 +55,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>E:\Program Files\OpenCV\opencv\build\include;$(IncludePath)</IncludePath>
+    <IncludePath>E:\Program Files\OpenCV\opencv\build\include;E:\Source\paddleOCR\PaddleOCR-release-2.7\deploy;$(IncludePath)</IncludePath>
     <LibraryPath>E:\Program Files\OpenCV\opencv\build\x64\vc16\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <ExternalIncludePath>E:\Source\paddleOCR\PaddleOCR-release-2.7\deploy;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>

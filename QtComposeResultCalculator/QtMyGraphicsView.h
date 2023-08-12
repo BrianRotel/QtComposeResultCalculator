@@ -13,6 +13,9 @@ class QtMyGraphicsView : public QGraphicsView
 public:
 	QtMyGraphicsView(QWidget *parent = nullptr);
 	~QtMyGraphicsView();
+
+	inline size_t getSourceImgHeight() { return Mat_Image.rows; }
+	inline size_t getSourceImgWidth() { return Mat_Image.cols; }
 protected:
 
 	void mouseMoveEvent(QMouseEvent* event) override;
@@ -22,6 +25,7 @@ protected:
 	void setROIMask();
 	void showImage();
 	QImage getImage();
+	cv::Rect expandRect(float multiple);
 	void convert2Sence(Mat target);
 	void runGrabCut();
 

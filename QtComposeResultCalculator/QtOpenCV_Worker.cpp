@@ -3,9 +3,11 @@
 #include<QDebug>
 #include<QThread>
 
-QtOpenCV_Worker::QtOpenCV_Worker(QObject *parent)
-	: QObject(parent)
-{}
+QtOpenCV_Worker::QtOpenCV_Worker(QWidget*parent)
+	: QMainWindow(parent)
+{
+    ui.setupUi(this);
+}
 
 QtOpenCV_Worker::~QtOpenCV_Worker()
 {}

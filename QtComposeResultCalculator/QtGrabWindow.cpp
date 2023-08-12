@@ -1,6 +1,6 @@
 ﻿#include "stdafx.h"
 #include "QtGrabWindow.h"
-
+#include <QElapsedTimer>
 using namespace cv;
 
 //Windows系统中使用DXGI截取桌面图像 此代码中DXGI获取图像来源于 https://www.cnblogs.com/TechNomad/p/17428347.html 
@@ -91,9 +91,15 @@ QtGrabWindow::QtGrabWindow(QWidget *parent)
 	waitKey();
 
 #endif // 0
-
+	className = TEXT("UnityWndClass");//UnrealWindow UnityWndClass
+	winName = TEXT("IdleSpiral");//剑灵 IdleSpiral
+	hwnd = FindWindow(className, winName);
 	m_pScreen = QApplication::primaryScreen();
 	startTimer(10);   //1秒25帧
+	timer = new QTimer(this);
+	bool isConnect = connect(timer, &QTimer::timeout, this, &QtGrabWindow::slotTimer);
+	//timer->start(500);
+
 	//drawOnce();
 }
 
@@ -101,14 +107,10 @@ QtGrabWindow::~QtGrabWindow()
 {}
 void QtGrabWindow::paintEvent(QPaintEvent * e)
 {
-#if 1
-    LPCWSTR className = TEXT("UnityWndClass");//UnrealWindow UnityWndClass
-    LPCWSTR winName = TEXT("IdleSpiral");//剑灵 IdleSpiral
-	HWND hwnd = FindWindow(className, winName);
-	// 截取全屏, 指定窗口Id进行截屏
-	// QPixmap pix = m_pScreen->grabWindow(QApplication::desktop()->winId());
-	//QList<QScreen*> wList = qApp->screens();
-	//qDebug() << wList.size();
+#if 0
+    //LPCWSTR className = TEXT("UnityWndClass");//UnrealWindow UnityWndClass
+    //LPCWSTR winName = TEXT("IdleSpiral");//剑灵 IdleSpiral
+	//HWND hwnd = FindWindow(className, winName);
 
 #if GDI
 	QPixmap pix = QPixmap::fromImage(myGrabWindow((WId)hwnd,false));
@@ -127,10 +129,6 @@ void QtGrabWindow::paintEvent(QPaintEvent * e)
 	//cv::Mat src_mat = cv::imdecode(pic_arr, cv::IMREAD_UNCHANGED);
 	cv::imshow("123", mat2);
 
-
-	//QPixmap pix = qApp->screens()[0]->grabWindow(0);
-	//QPixmap pix = m_pScreen->grabWindow((WId)hwnd);
-	//QPixmap pix = m_pScreen->grabWindow(this->winId());
 	//绘制截屏
 	QPainter p;
 	p.begin(this);
@@ -570,7 +568,39 @@ void QtGrabWindow::timerEvent(QTimerEvent* e)
 {
     update();  //更新窗口
 }
+void QtGrabWindow::slotTimer()
+{
+	QElapsedTimer e;
+	e.start();
 
+	QPixmap pix = QPixmap::fromImage(myGrabWindow((WId)hwnd, false));
+	if (!pix)
+	{
+		return;
+	}
+
+
+	//QImage img2 = pix.toImage();
+	int mX = 1550;
+	int mY = 460;
+	int mW = 100;
+	int mH = 100;
+	mX = std::min(mX, pix.rect().bottomRight().x());
+	mY = std::min(mY, pix.rect().bottomRight().y());
+	mW = std::min(mW, pix.width());
+	mH = std::min(mH, pix.height());
+	QImage img2 = pix.copy(mX, mY, mW, mH).toImage();
+	resize(img2.size());
+
+	//绘制截屏
+	QPalette palette = this->palette();
+	QBrush brush = palette.brush(QPalette::Window);
+	brush.setTextureImage(img2);
+	palette.setBrush(QPalette::Window, brush);
+	this->setPalette(palette);
+
+	qDebug() <<"timeElapsed"<< e.elapsed();
+}
 //将下面的代码设置到主函数,调用函数进行bitmap图片的保存
 #ifdef DXGI
 int main(int argc, char* argv[])
