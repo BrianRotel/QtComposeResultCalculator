@@ -122,7 +122,6 @@
     <QtMoc Include="QtChildWidget.h" />
     <ClInclude Include="ChineseLetterHelper.h" />
     <QtMoc Include="QtMyDataBase.h" />
-    <QtMoc Include="QtOpenCV_Worker.h" />
     <QtMoc Include="QtGetWindowInfo.h" />
     <QtMoc Include="QtGrabWindow.h" />
     <ClInclude Include="DXGIDuplicator.h" />
@@ -139,7 +138,6 @@
     <ClCompile Include="QtMyClipboard.cpp" />
     <ClCompile Include="QtMyDataBase.cpp" />
     <ClCompile Include="QtMyGraphicsView.cpp" />
-    <ClCompile Include="QtOpenCV_Worker.cpp" />
     <ClCompile Include="QtSetCompose.cpp" />
     <ClCompile Include="QtTestWidget.cpp" />
     <ClCompile Include="stdafx.cpp">

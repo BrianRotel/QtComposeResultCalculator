@@ -5,7 +5,6 @@
 #include "QtMyClipboard.h"
 #include "QtTestWidget.h"
 #include "QtMyGraphicsView.h"
-#include "QtOpenCV_Worker.h"
 
 #include <QtWidgets/QApplication>
 #include <QScreen>
@@ -43,12 +42,6 @@ int main(int argc, char *argv[])
     e.show();
     //QtMyGraphicsView f;
     //f.show();
-    //QtOpenCV_Worker g;
-    //Mat image1 = imread("./test1.png", IMREAD_GRAYSCALE);
-    //Mat image2;
-    //g.task(&image1, &image2, 1);
-    //imshow("1",image2);
-    //g.show();
 
     return a.exec();
 }
