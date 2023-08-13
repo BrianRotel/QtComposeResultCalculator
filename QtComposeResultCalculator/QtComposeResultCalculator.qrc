@@ -3,5 +3,9 @@
         <file>fix_0000_图层 31.bmp</file>
         <file>Resource/Crosshair.png</file>
         <file>Resource/watting.gif</file>
+        <file>Resource/1.gif</file>
+        <file>Resource/2.webp</file>
+        <file>Resource/2.gif</file>
+        <file>Resource/3.gif</file>
     </qresource>
 </RCC>

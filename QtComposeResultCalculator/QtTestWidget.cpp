@@ -187,14 +187,8 @@ void runGrabCut()
 }
 void QtTestWidget::onPushButton(bool b)
 {
-	//QtWatting* pQwait = new QtWatting(this);
 	pQwait->show();
-	//QApplication::setOverrideCursor(Qt::WaitCursor);//设置鼠标为等待状态
-	//下面的处理事件循环是针对循环for这种耗时操作的,这里因为调用了opencv的grabCut无法进行事件处理,只能用watting取代
-	//QCoreApplication::processEvents();
-	//QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 	myView->getGrabImage();
-	//QApplication::restoreOverrideCursor();
 }
 void QtTestWidget::onReceiveResult(QImage img)
 {
