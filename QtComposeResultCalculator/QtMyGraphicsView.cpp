@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "QtMyGraphicsView.h"
 #include <QElapsedTimer>
+#include "WorkThread.hpp"
 
 QtMyGraphicsView::QtMyGraphicsView(QWidget *parent)
 	: QGraphicsView(parent)
@@ -9,6 +10,15 @@ QtMyGraphicsView::QtMyGraphicsView(QWidget *parent)
 	setMouseTracking(true);
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	qRegisterMetaType<Mat>("Mat");
+	qRegisterMetaType<Rect>("Rect");
+
+	Worker* worker = new Worker;
+	worker->moveToThread(&workerThread);
+	bool isC = connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
+	bool isC1 = connect(this, &QtMyGraphicsView::operate, worker, &Worker::doWork, Qt::QueuedConnection);
+	bool isC3 = connect(worker, &Worker::resultReady, this, &QtMyGraphicsView::handleResults);
+	workerThread.start();
 
 	Mat_Image = imread("C:/Users/Administrator/Pictures/7fe3e008f1d04ba23003a550b777cff.png");
 
@@ -21,12 +31,13 @@ QtMyGraphicsView::QtMyGraphicsView(QWidget *parent)
 	init = false;
 	isPress = false;
 	showImage();
-	//std::string title = "src";
-	//imshow(title, mMask);
 }
 
 QtMyGraphicsView::~QtMyGraphicsView()
-{}
+{
+	workerThread.quit();
+	workerThread.wait();
+}
 
 void QtMyGraphicsView::mouseMoveEvent(QMouseEvent* event)
 {
@@ -301,24 +312,32 @@ void QtMyGraphicsView::convert2Sence(Mat target) {
 	QGraphicsPixmapItem* item = new QGraphicsPixmapItem(pixmap.scaled(this->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 	scene.addItem(item);
 }
-void QtMyGraphicsView::runGrabCut() {
-	if (mRect.width < 2 || mRect.height < 2) {
-		return;
-	}
+//void QtMyGraphicsView::runGrabCut() {
+//	if (mRect.width < 2 || mRect.height < 2) {
+//		return;
+//	}
+//
+//	if (init) {
+//		grabCut(Mat_Image, mMask, mRect, bgModel, fgModel, 1);
+//	}
+//	else
+//	{
+//		grabCut(Mat_Image, mMask, mRect, bgModel, fgModel, 1, GC_INIT_WITH_RECT);
+//		init = true;
+//	}
+//}
 
-	if (init) {
-		grabCut(Mat_Image, mMask, mRect, bgModel, fgModel, 1);
-	}
-	else
-	{
-		grabCut(Mat_Image, mMask, mRect, bgModel, fgModel, 1, GC_INIT_WITH_RECT);
-		init = true;
-	}
+void QtMyGraphicsView::getGrabImage() {
+	emit operate(Mat_Image, mMask, mRect, init);
+	qDebug() << "in mMask" << &mMask;
 }
-QImage QtMyGraphicsView::getGrabImage()
+void QtMyGraphicsView::handleResults(Mat mat)
 {
-	runGrabCut();
-	return getImage();
+	qDebug() << "out mat" << &mat;
+	mMask = mat;
+	qDebug() << "out mMask" << &mMask;//?
+	QImage img = getImage();
+	emit returnResult(img);
 }
 
 #ifdef DROP_IMAGE

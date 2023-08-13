@@ -101,6 +101,7 @@
     </QtMoc>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <QtMoc Include="WorkThread.hpp" />
     <QtRcc Include="QtComposeResultCalculator.qrc" />
     <QtUic Include="QtChildWidget.ui" />
     <QtUic Include="QtComposeResultCalculator.ui" />
@@ -117,6 +118,7 @@
     <QtUic Include="QtMyGraphicsView.ui" />
     <QtUic Include="QtSetCompose.ui" />
     <QtUic Include="QtTestWidget.ui" />
+    <QtUic Include="QtWatting.ui" />
     <ResourceCompile Include="QtComposeResultCalculator.rc" />
     <QtMoc Include="QtSetCompose.h" />
     <QtMoc Include="QtChildWidget.h" />
@@ -130,6 +132,7 @@
     <QtMoc Include="QtMyClipboard.h" />
     <QtMoc Include="QtTestWidget.h" />
     <QtMoc Include="QtMyGraphicsView.h" />
+    <QtMoc Include="QtWatting.h" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="QtCrosshairLabelMove.cpp" />
     <ClCompile Include="QtGetWindowInfo.cpp" />
@@ -140,6 +143,7 @@
     <ClCompile Include="QtMyGraphicsView.cpp" />
     <ClCompile Include="QtSetCompose.cpp" />
     <ClCompile Include="QtTestWidget.cpp" />
+    <ClCompile Include="QtWatting.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">Create</PrecompiledHeader>

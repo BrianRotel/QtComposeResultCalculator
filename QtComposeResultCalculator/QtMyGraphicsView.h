@@ -37,8 +37,13 @@ protected:
 	void dropEvent(QDropEvent* event);
 	void showCrabCutMatting(const char* filePath);
 #endif
-public slots:
-	QImage getGrabImage();
+public:
+	void getGrabImage();
+public slots:	 
+	void handleResults(Mat);
+signals:
+	void operate(Mat src, Mat mask, Rect mRect, bool init);
+	void returnResult(QImage result);
 private:
 	Ui::QtMyGraphicsViewClass ui;
 
@@ -48,7 +53,7 @@ private:
 	Rect mRect;
 	Mat mMask;
 	Mat Mat_Image;
-	Mat bgModel;
-	Mat fgModel;
+
 	QGraphicsScene scene;
+	QThread workerThread;
 };

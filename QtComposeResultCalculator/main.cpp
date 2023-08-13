@@ -5,6 +5,7 @@
 #include "QtMyClipboard.h"
 #include "QtTestWidget.h"
 #include "QtMyGraphicsView.h"
+#include "QtWatting.h"
 
 #include <QtWidgets/QApplication>
 #include <QScreen>
@@ -15,6 +16,7 @@
 
 int main(int argc, char *argv[])
 {
+    QApplication::addLibraryPath("./plugins");
 	QApplication a(argc, argv);
 
 #if 0
@@ -42,6 +44,5 @@ int main(int argc, char *argv[])
     e.show();
     //QtMyGraphicsView f;
     //f.show();
-
     return a.exec();
 }

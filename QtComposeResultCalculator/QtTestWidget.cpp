@@ -2,6 +2,7 @@
 #include "QtTestWidget.h"
 #include <QPainter>
 #include <QElapsedTimer>
+
 //grabcut算法
 bool setMouse = false;    //判断鼠标左键的状态（up / down）
 bool init;
@@ -31,6 +32,8 @@ QtTestWidget::QtTestWidget(QWidget* parent)
 	//doSomeThing();//边缘检测
 	//QMessageBox::warning(this, "源图像", "");
 	//doSomeThing2();//区域选图检测
+	isConnect = QObject::connect(myView, SIGNAL(returnResult(QImage)), this, SLOT(onReceiveResult(QImage)));
+	pQwait = new QtWatting(this);
 }
 
 QtTestWidget::~QtTestWidget()
@@ -184,13 +187,22 @@ void runGrabCut()
 }
 void QtTestWidget::onPushButton(bool b)
 {
-	myClip.show();
-	QElapsedTimer e;
-	e.start();
-	QImage img = myView->getGrabImage();
-	qDebug() << "GrabImageTime" << e.elapsed();
-	myClip.setImage(img);
+	//QtWatting* pQwait = new QtWatting(this);
+	pQwait->show();
+	//QApplication::setOverrideCursor(Qt::WaitCursor);//设置鼠标为等待状态
+	//下面的处理事件循环是针对循环for这种耗时操作的,这里因为调用了opencv的grabCut无法进行事件处理,只能用watting取代
+	//QCoreApplication::processEvents();
+	//QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+	myView->getGrabImage();
+	//QApplication::restoreOverrideCursor();
 }
+void QtTestWidget::onReceiveResult(QImage img)
+{
+	myClip.setImage(img);
+	myClip.show();
+	pQwait->close();
+}
+
 void QtTestWidget::onPushButton2(bool b)
 {
 

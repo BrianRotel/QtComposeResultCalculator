@@ -2,5 +2,6 @@
     <qresource prefix="/QtComposeResultCalculator">
         <file>fix_0000_图层 31.bmp</file>
         <file>Resource/Crosshair.png</file>
+        <file>Resource/watting.gif</file>
     </qresource>
 </RCC>
