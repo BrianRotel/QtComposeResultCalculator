@@ -58,7 +58,8 @@ public:
 	void timerEvent(QTimerEvent * e);
 private slots:
 	void slotTimer();
-
+private:
+	QImage findPicture(QImage scr, QImage child);
 private:
 	Ui::QtGrabWindowClass ui;
 	QScreen* m_pScreen = nullptr;

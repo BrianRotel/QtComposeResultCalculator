@@ -133,6 +133,7 @@
     <QtMoc Include="QtTestWidget.h" />
     <QtMoc Include="QtMyGraphicsView.h" />
     <QtMoc Include="QtWatting.h" />
+    <ClInclude Include="public.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="QtCrosshairLabelMove.cpp" />
     <ClCompile Include="QtGetWindowInfo.cpp" />

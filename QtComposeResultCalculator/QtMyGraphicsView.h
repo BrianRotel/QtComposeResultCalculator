@@ -29,10 +29,10 @@ protected:
 	void convert2Sence(Mat target);
 	void runGrabCut();
 
-	QImage MatToImage(Mat& m);
-	QImage cvMatToQImage(const cv::Mat& mat);
-	cv::Mat QImageTocvMat(const QImage& image);
-	Mat ImageToMat(QImage& image);
+	//QImage MatToImage(Mat& m);
+	//QImage cvMatToQImage(const cv::Mat& mat);
+	//cv::Mat QImageTocvMat(const QImage& image);
+	//Mat ImageToMat(QImage& image);
 #ifdef DROP_IMAGE
 	void dropEvent(QDropEvent* event);
 	void showCrabCutMatting(const char* filePath);

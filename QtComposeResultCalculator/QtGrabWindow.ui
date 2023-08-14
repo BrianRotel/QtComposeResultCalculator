@@ -2,17 +2,18 @@
 <ui version="4.0">
  <class>QtGrabWindowClass</class>
  <widget class="QMainWindow" name="QtGrabWindowClass">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>976</width>
-    <height>741</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>QtGrabWindow</string>
-  </property>
+     <property name="geometry">
+         <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>976</width>
+             <height>741</height>
+         </rect>
+     </property>
+     <property name="windowTitle">
+         <string>QtGrabWindow</string>
+     </property>
+     <widget class="QWidget" name="centralWidget" />
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

@@ -36,12 +36,12 @@ int main(int argc, char *argv[])
 #endif
     //QtGetWindowInfo b;
     //b.show();
-    //QtGrabWindow c;
-    //c.show();
+    QtGrabWindow c;
+    c.show();
     //QtMyClipboard d;
     //d.show();
-    QtTestWidget e;
-    e.show();
+    //QtTestWidget e;
+    //e.show();
     //QtMyGraphicsView f;
     //f.show();
     return a.exec();

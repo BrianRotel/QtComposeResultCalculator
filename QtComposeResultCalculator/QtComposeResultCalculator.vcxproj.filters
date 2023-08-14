@@ -163,5 +163,8 @@
     <ClInclude Include="DXGIDuplicator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="public.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
