@@ -6,6 +6,7 @@
 #include "QtTestWidget.h"
 #include "QtMyGraphicsView.h"
 #include "QtWatting.h"
+#include "QtGetScreenColor.h"
 
 #include <QtWidgets/QApplication>
 #include <QScreen>
@@ -44,5 +45,7 @@ int main(int argc, char *argv[])
     //e.show();
     //QtMyGraphicsView f;
     //f.show();
+    //QtGetScreenColor g;
+    //g.show();
     return a.exec();
 }

@@ -1,6 +1,9 @@
 ﻿#include "stdafx.h"
 #include "QtGrabWindow.h"
 #include <QElapsedTimer>
+#include <QTest>
+
+#include "public.hpp"
 using namespace cv;
 
 //Windows系统中使用DXGI截取桌面图像 此代码中DXGI获取图像来源于 https://www.cnblogs.com/TechNomad/p/17428347.html 
@@ -12,18 +15,24 @@ QtGrabWindow::QtGrabWindow(QWidget *parent)
 {
 	ui.setupUi(this);
 	setWindowTitle(QStringLiteral("Qt之grabWindow实现截图功能"));
-
+	clickP = QPoint(0, 0);
 
 	className = TEXT("UnityWndClass");//UnrealWindow UnityWndClass
 	winName = TEXT("IdleSpiral");//剑灵 IdleSpiral
 	hwnd = FindWindow(className, winName);
+	::SetForegroundWindow(hwnd);
 	m_pScreen = QApplication::primaryScreen();
+	bx = 65536 / m_pScreen->size().width();
+	by = 65536 / m_pScreen->size().height();
 	startTimer(10);   //1秒25帧
 	timer = new QTimer(this);
 	bool isConnect = connect(timer, &QTimer::timeout, this, &QtGrabWindow::slotTimer);
-	timer->start(500);
-
+	timer->start(1000);
+	setMouseTracking(true);
+	this->centralWidget()->setMouseTracking(true);
 	//drawOnce();
+
+
 }
 
 QtGrabWindow::~QtGrabWindow()
@@ -491,17 +500,23 @@ void QtGrabWindow::timerEvent(QTimerEvent* e)
 {
     update();  //更新窗口
 }
-QImage QtGrabWindow::findPicture(QImage scr, QImage child)
+QImage QtGrabWindow::findPicture(QImage src, QImage child)
 {
+
+	QImage cChi = child.convertToFormat(QImage::Format_RGB32);
+	//cSrc.setAlphaChannel(child.convertToFormat(QImage::Format_Alpha8));
+	Mat srcImg = QImage2cvMat(src);
+	Mat templateImg = QImage2cvMat(cChi);
+
 	//图像匹配 --> 大图中找小图
 #if 1
 	//Mat image1 = imread("/test1.png", IMREAD_GRAYSCALE);
 	//Mat image2 = imread("/test2.png", IMREAD_GRAYSCALE);
 	//qDebug() << QDir::currentPath();
-	Mat templateImg = imread("./test2.png");
-	Mat srcImg = imread("./test1.png");
+	//Mat templateImg = imread("./test2.png");
+	//Mat srcImg = imread("./test1.png");
 	//Mat dst = srcImg.clone();
-	imshow("temp", templateImg);
+	//imshow("src", srcImg);
 
 	//int width = srcImg.cols - templateImg.cols + 1;//result宽度
 	//int height = srcImg.rows - templateImg.rows + 1;//result高度
@@ -523,11 +538,18 @@ QImage QtGrabWindow::findPicture(QImage scr, QImage child)
 	minMaxLoc(resultImg, &minValue, &maxValue, &minLoc, &maxLoc);
 	//qDebug() << "minValue=" << minValue ;
 	//qDebug() << "maxValue=" << maxValue ;
+	if (maxValue < 0.95)//置信度
+	{
+		clickP = QPoint(0, 0);
+		return cvMat2QImage(srcImg);
+	}
 	//匹配结果的四个顶点
 	Point pt1(maxLoc.x, maxLoc.y);
 	Point pt2(maxLoc.x + templateImg.cols, maxLoc.y);
 	Point pt3(maxLoc.x, maxLoc.y + templateImg.rows);
 	Point pt4(maxLoc.x + templateImg.cols, maxLoc.y + templateImg.rows);
+
+	clickP = QPoint(pt1.x + (pt2.x - pt1.x)/2, pt1.y + (pt4.y - pt2.y)/2);
 
 	//画线
 	line(srcImg, pt1, pt2, cv::Scalar(0, 255, 0), 11, 1);
@@ -536,18 +558,25 @@ QImage QtGrabWindow::findPicture(QImage scr, QImage child)
 	line(srcImg, pt3, pt1, cv::Scalar(0, 255, 0), 11, 1);
 	//rectangle(srcImg, maxLoc, Point(maxLoc.x + templateImg.cols, maxLoc.y + templateImg.rows), Scalar(0, 255, 0), 2, 8);
 	//imshow("dst", dst);
-	imshow("result", srcImg);
-	waitKey();
+	//imshow("result", srcImg);
+	//waitKey();
 #endif
 #if 0
-	Mat image = imread("./test1.png");  //读取原图
-	Mat templ = imread("./test2.png", 0);  //读取模板图的灰度图像
+	//Mat image = imread("./test1.png");  //读取原图
+	//Mat templ = imread("./test2.png", 0);  //读取模板图的灰度图像
 
-	Mat src;
-	cvtColor(image, src, COLOR_RGB2GRAY); //将原图转换为灰度图像
+	Mat src1;
+	cvtColor(image, src1, COLOR_RGB2GRAY); //将原图转换为灰度图像
+	imshow("src", image);
+	imshow("templ", templ);
+	imshow("src1", src1);
+#endif // 0
+#if 0
 
-	Mat result(src.rows - templ.rows + 1, src.cols - templ.cols + 1, CV_32FC1); //构建结果矩阵
-	matchTemplate(src, templ, result, TM_CCOEFF_NORMED); //模板匹配
+
+
+	Mat result(src1.rows - templ.rows + 1, src1.cols - templ.cols + 1, CV_32FC1); //构建结果矩阵
+	matchTemplate(src1, templ, result, TM_CCOEFF_NORMED); //模板匹配
 
 	double dMaxVal; //分数最大值	
 	Point ptMaxLoc; //最大值坐标
@@ -567,11 +596,11 @@ QImage QtGrabWindow::findPicture(QImage scr, QImage child)
 
 
 	imshow("image", image);
-	imwrite("img.jpg", image);
+	//imwrite("img.jpg", image);
 	waitKey();
 
 #endif // 0
-	return QImage();
+	return cvMat2QImage(srcImg);
 }
 void QtGrabWindow::slotTimer()
 {
@@ -583,6 +612,41 @@ void QtGrabWindow::slotTimer()
 	{
 		return;
 	}
+	::SetForegroundWindow(hwnd);
+
+	QImage showImg = findPicture(pix.toImage(), QImage(":/QtComposeResultCalculator/Resource/test2.png"));
+
+	QWindow* windowLogin = QWindow::fromWinId((WId)hwnd);
+	windowLogin->setFramePosition(QPoint(0,31));
+	//QSize size = windowLogin->size();
+	//POINT pos = { 0,0 };
+	//GetCursorPos(&pos);
+	//qDebug() << "x" << pos.x << "y" << pos.y;
+	clickP.setY(clickP.y()+31);
+	qDebug() << clickP;
+
+
+	//qDebug() << mapToGlobal(clickP);
+	//QTest::mouseMove(windowLogin, mapToGlobal(clickP), 100);
+	//QTest::mouseClick(windowLogin, Qt::LeftButton, Qt::NoModifier, clickP, 100);
+	//QTest::keyClick(windowLogin, Qt::Key_W, Qt::NoModifier,100);
+
+
+	// 按下'w'键
+	//keybd_event(119, 0, 0, 0);
+	//keybd_event(119, 0, KEYEVENTF_KEYUP, 0);
+	// 
+	//showImg.setPixelColor(1207, 989-31,QColor(0,0,255));
+	QColor pixcolor = showImg.pixelColor(QPoint(1207, 889 - 31));
+	if (pixcolor.red() != 255)
+	{
+		Sleep(1500);
+		mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP | MOUSEEVENTF_MOVE, clickP.x() * bx, clickP.y() * by, 0, 0);
+		QTimer::singleShot(2000, this, &QtGrabWindow::clickOther);
+	}
+	qDebug() << "R" << QString::number(pixcolor.red());//255 127
+	qDebug() << "G" << QString::number(pixcolor.green());//0 15
+	qDebug() << "B" << QString::number(pixcolor.blue());//0 15
 
 #if 0
 	//QImage img2 = pix.toImage();
@@ -600,7 +664,7 @@ void QtGrabWindow::slotTimer()
 	//绘制截屏
 	QPalette palette = this->palette();
 	QBrush brush = palette.brush(QPalette::Window);
-	brush.setTextureImage(pix.toImage());
+	brush.setTextureImage(showImg);
 	palette.setBrush(QPalette::Window, brush);
 	this->setPalette(palette);
 	resize(pix.size());
@@ -631,3 +695,28 @@ int main(int argc, char* argv[])
 	}
 }
 #endif
+void QtGrabWindow::clickOther()
+{
+	mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP | MOUSEEVENTF_MOVE, clickP.x()* bx, (clickP.y() - 70)* by, 0, 0);
+	Sleep(200);
+	mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP | MOUSEEVENTF_MOVE, clickP.x() * bx, (clickP.y() + 70) * by, 0, 0);
+}
+void QtGrabWindow::mouseMoveEvent(QMouseEvent* event)
+{
+#if 0
+	qDebug() << "X" << QString::number(event->x());
+	qDebug() << "Y" << QString::number(event->y());
+
+	//    ui->showX->setText(QString::number(QCursor().pos().x()));//以电脑屏幕左上角为0点
+	//    ui->showY->setText(QString::number(QCursor().pos().y()));
+
+	//  ui->showdata->setText(tr("(%1,%2)").arg(event->x()).arg(event->y())); //哦。。一个标签显示两个变量是这么搞的 不好意思丢人了
+	//arg()是QString类中的一个静态函数，使用它就可以在字符串中使用变量了。所以就不用那个强制类型转换了
+	QPixmap p = this->grab(this->geometry());
+	QImage image = p.toImage();
+	QColor pixcolor = image.pixelColor(QPoint(event->x(), event->y()));
+	qDebug() << "R" << QString::number(pixcolor.red());
+	qDebug() << "G" << QString::number(pixcolor.green());
+	qDebug() << "B" << QString::number(pixcolor.blue());
+#endif
+}

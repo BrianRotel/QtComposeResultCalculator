@@ -59,7 +59,9 @@ public:
 private slots:
 	void slotTimer();
 private:
-	QImage findPicture(QImage scr, QImage child);
+	QImage findPicture(QImage src, QImage child);
+	void mouseMoveEvent(QMouseEvent* event);
+	void clickOther();
 private:
 	Ui::QtGrabWindowClass ui;
 	QScreen* m_pScreen = nullptr;
@@ -70,6 +72,9 @@ private:
 	LPCWSTR className;
 	LPCWSTR winName;
 	HWND hwnd;
+	QPoint clickP;
+	int bx;
+	int by;
 private:
 
 #ifdef DXGI_TEST

@@ -7,5 +7,6 @@
         <file>Resource/2.webp</file>
         <file>Resource/2.gif</file>
         <file>Resource/3.gif</file>
+        <file>Resource/test2.png</file>
     </qresource>
 </RCC>

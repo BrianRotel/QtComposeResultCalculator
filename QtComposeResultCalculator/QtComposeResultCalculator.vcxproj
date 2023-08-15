@@ -32,7 +32,7 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.5.0_msvc2019_64</QtInstall>
-    <QtModules>core;gui;widgets;core5compat;multimedia;sql</QtModules>
+    <QtModules>core;gui;testlib;widgets;core5compat;multimedia;sql</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
@@ -112,6 +112,7 @@
     <ClCompile Include="QtComposeResultCalculator.cpp" />
     <ClCompile Include="main.cpp" />
     <None Include="QtComposeResultCalculator.ico" />
+    <QtUic Include="QtGetScreenColor.ui" />
     <QtUic Include="QtGetWindowInfo.ui" />
     <QtUic Include="QtGrabWindow.ui" />
     <QtUic Include="QtMyClipboard.ui" />
@@ -134,8 +135,10 @@
     <QtMoc Include="QtMyGraphicsView.h" />
     <QtMoc Include="QtWatting.h" />
     <ClInclude Include="public.hpp" />
+    <QtMoc Include="QtGetScreenColor.h" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="QtCrosshairLabelMove.cpp" />
+    <ClCompile Include="QtGetScreenColor.cpp" />
     <ClCompile Include="QtGetWindowInfo.cpp" />
     <ClCompile Include="QtGrabWindow.cpp" />
     <ClCompile Include="QtCrosshairLabelClick.cpp" />

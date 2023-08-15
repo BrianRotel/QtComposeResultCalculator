@@ -91,6 +91,9 @@
     <ClCompile Include="QtWatting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="QtGetScreenColor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtSetCompose.ui">
@@ -115,6 +118,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="QtWatting.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="QtGetScreenColor.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -153,6 +159,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="WorkThread.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="QtGetScreenColor.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

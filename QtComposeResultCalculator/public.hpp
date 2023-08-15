@@ -1,29 +1,29 @@
-#pragma once
+ï»¿#pragma once
 #include "stdafx.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 using namespace cv;
 
-QImage MatToImage(Mat& m) //Mat×ªQImage
+static QImage MatToImage(Mat& m) //Matè½¬QImage
 {
-	//ÅĞ¶ÏmµÄÀàĞÍ£¬¿ÉÄÜÊÇCV_8UC1  CV_8UC2  CV_8UC3  CV_8UC4
+	//åˆ¤æ–­mçš„ç±»å‹ï¼Œå¯èƒ½æ˜¯CV_8UC1  CV_8UC2  CV_8UC3  CV_8UC4
 	switch (m.type())
-	{ //QIamge ¹¹Ôìº¯Êı, ((const uchar *data, ¿í(ÁĞ),¸ß(ĞĞ), Ò»ĞĞ¹²¶àÉÙ¸ö£¨×Ö½Ú£©Í¨µÀ£¬¿í¶È*×Ö½ÚÊı£¬ºê²ÎÊı)
+	{ //QIamge æ„é€ å‡½æ•°, ((const uchar *data, å®½(åˆ—),é«˜(è¡Œ), ä¸€è¡Œå…±å¤šå°‘ä¸ªï¼ˆå­—èŠ‚ï¼‰é€šé“ï¼Œå®½åº¦*å­—èŠ‚æ•°ï¼Œå®å‚æ•°)
 	case CV_8UC1:
 	{
 		QImage img((uchar*)m.data, m.cols, m.rows, m.cols * 1, QImage::Format_Grayscale8);
 		return img;
 	}
 	break;
-	case CV_8UC3:   //Ò»¸öÏñËØµãÓÉÈı¸ö×Ö½Ú×é³É
+	case CV_8UC3:   //ä¸€ä¸ªåƒç´ ç‚¹ç”±ä¸‰ä¸ªå­—èŠ‚ç»„æˆ
 	{
 		const uchar* pSrc = (const uchar*)m.data;
 		QImage image(pSrc, m.cols, m.rows, m.step, QImage::Format_RGB888);
 
 		return image.rgbSwapped();
-		//cvtColor(m,m,COLOR_BGR2RGB); BGR×ªRGB
+		//cvtColor(m,m,COLOR_BGR2RGB); BGRè½¬RGB
 		//QImage img((uchar*)m.data, m.cols, m.rows, m.cols * 3, QImage::Format_RGB888);
-		//return img.rgbSwapped(); //opencvÊÇBGR  QtÄ¬ÈÏÊÇRGB  ËùÒÔRGBË³Ğò×ª»»
+		//return img.rgbSwapped(); //opencvæ˜¯BGR  Qté»˜è®¤æ˜¯RGB  æ‰€ä»¥RGBé¡ºåºè½¬æ¢
 	}
 	break;
 	case CV_8UC4:
@@ -34,26 +34,26 @@ QImage MatToImage(Mat& m) //Mat×ªQImage
 	break;
 	default:
 	{
-		QImage img; //Èç¹ûÓöµ½Ò»¸öÍ¼Æ¬¾ù²»ÊôÓÚÕâÈıÖÖ£¬·µ»ØÒ»¸ö¿ÕµÄÍ¼Æ¬
+		QImage img; //å¦‚æœé‡åˆ°ä¸€ä¸ªå›¾ç‰‡å‡ä¸å±äºè¿™ä¸‰ç§ï¼Œè¿”å›ä¸€ä¸ªç©ºçš„å›¾ç‰‡
 		return img;
 	}
 	}
 }
 
-Mat ImageToMat(QImage& image) //QImage×ªMat
+static Mat ImageToMat(QImage& image) //QImageè½¬Mat
 {
-	Mat mat = Mat::zeros(image.height(), image.width(), image.format()); //³õÊ¼»¯Mat
-	switch (image.format()) //ÅĞ¶ÏimageµÄÀàĞÍ
+	Mat mat = Mat::zeros(image.height(), image.width(), image.format()); //åˆå§‹åŒ–Mat
+	switch (image.format()) //åˆ¤æ–­imageçš„ç±»å‹
 	{
-	case QImage::QImage::Format_Grayscale8:  //»Ò¶ÈÍ¼
+	case QImage::QImage::Format_Grayscale8:  //ç°åº¦å›¾
 		mat = Mat(image.height(), image.width(),
 			CV_8UC1, (void*)image.constBits(), image.bytesPerLine());
 		break;
-	case QImage::Format_RGB888: //3Í¨µÀ²ÊÉ«
+	case QImage::Format_RGB888: //3é€šé“å½©è‰²
 		mat = Mat(image.height(), image.width(),
 			CV_8UC3, (void*)image.constBits(), image.bytesPerLine());
 		break;
-	case QImage::Format_ARGB32: //4Í¨µÀ²ÊÉ«
+	case QImage::Format_ARGB32: //4é€šé“å½©è‰²
 		mat = Mat(image.height(), image.width(),
 			CV_8UC4, (void*)image.constBits(), image.bytesPerLine());
 		break;
@@ -62,7 +62,7 @@ Mat ImageToMat(QImage& image) //QImage×ªMat
 	}
 	return mat;
 }
-QImage cvMatToQImage(const cv::Mat& mat)
+static QImage cvMatToQImage(const cv::Mat& mat)
 {
 	switch (mat.type()) {
 	case CV_8UC1: {
@@ -103,13 +103,13 @@ QImage cvMatToQImage(const cv::Mat& mat)
 
 	return QImage();
 }
-cv::Mat QImageTocvMat(const QImage& image)
+static cv::Mat QImageTocvMat(const QImage& image)
 {
 	cv::Mat mat;
 	switch (image.format())
 	{
-	case QImage::Format_Grayscale8: //»Ò¶ÈÍ¼£¬Ã¿¸öÏñËØµã1¸ö×Ö½Ú£¨8Î»£©
-	case QImage::Format_Indexed8: //Mat¹¹Ôì£ºĞĞÊı£¬ÁĞÊı£¬´æ´¢½á¹¹£¬Êı¾İ£¬stepÃ¿ĞĞ¶àÉÙ×Ö½Ú
+	case QImage::Format_Grayscale8: //ç°åº¦å›¾ï¼Œæ¯ä¸ªåƒç´ ç‚¹1ä¸ªå­—èŠ‚ï¼ˆ8ä½ï¼‰
+	case QImage::Format_Indexed8: //Matæ„é€ ï¼šè¡Œæ•°ï¼Œåˆ—æ•°ï¼Œå­˜å‚¨ç»“æ„ï¼Œæ•°æ®ï¼Œstepæ¯è¡Œå¤šå°‘å­—èŠ‚
 		mat = cv::Mat(image.height(), image.width(), CV_8UC1, (void*)image.constBits(), image.bytesPerLine());
 		break;
 	case QImage::Format_ARGB32:
@@ -117,10 +117,188 @@ cv::Mat QImageTocvMat(const QImage& image)
 	case QImage::Format_ARGB32_Premultiplied:
 		mat = cv::Mat(image.height(), image.width(), CV_8UC4, (void*)image.constBits(), image.bytesPerLine());
 		break;
-	case QImage::Format_RGB888: //RR,GG,BB×Ö½ÚË³Ğò´æ´¢
+	case QImage::Format_RGB888: //RR,GG,BBå­—èŠ‚é¡ºåºå­˜å‚¨
 		mat = cv::Mat(image.height(), image.width(), CV_8UC3, (void*)image.constBits(), image.bytesPerLine());
-		cv::cvtColor(mat, mat, cv::COLOR_RGB2BGR); //opencvĞèÒª×ªÎªBGRµÄ×Ö½ÚË³Ğò
+		cv::cvtColor(mat, mat, cv::COLOR_RGB2BGR); //opencvéœ€è¦è½¬ä¸ºBGRçš„å­—èŠ‚é¡ºåº
 		break;
 	}
 	return mat;
+}
+
+static QImage cvMat2QImage(const cv::Mat& mat)
+{
+    if (mat.empty())
+    {
+        return QImage();
+    }
+    QImage image;
+    switch (mat.type())
+    {
+    case CV_8UC1:
+    {
+        image = QImage((const uchar*)(mat.data),
+            mat.cols, mat.rows, mat.step,
+            QImage::Format_Grayscale8);
+        return image.copy();
+    }
+    case CV_8UC2:
+    {
+        mat.convertTo(mat, CV_8UC1);
+        image = QImage((const uchar*)(mat.data),
+            mat.cols, mat.rows, mat.step,
+            QImage::Format_Grayscale8);
+        return image.copy();
+    }
+    case CV_8UC3:
+    {
+        // Copy input Mat
+        const uchar* pSrc = (const uchar*)mat.data;
+        // Create QImage with same dimensions as input Mat
+        QImage image(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+        return image.rgbSwapped();
+    }
+    case CV_8UC4:
+    {
+        //cv::cvtColor(mat, mat, cv::COLOR_BGRA2RGBA);
+        // Copy input Mat
+        const uchar* pSrc = (const uchar*)mat.data;
+        // Create QImage with same dimensions as input Mat
+        QImage image(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_ARGB32);
+        return image.copy();
+    }
+    case CV_32FC1:
+    {
+        Mat normalize_mat;
+        normalize(mat, normalize_mat, 0, 255, NORM_MINMAX, -1);
+        normalize_mat.convertTo(normalize_mat, CV_8U);
+        const uchar* pSrc = (const uchar*)normalize_mat.data;
+        QImage image(pSrc, normalize_mat.cols, normalize_mat.rows, normalize_mat.step, QImage::Format_Grayscale8);
+        return image.copy();
+    }
+    case CV_32FC3:
+    {
+        Mat normalize_mat;
+        normalize(mat, normalize_mat, 0, 255, NORM_MINMAX, -1);
+        normalize_mat.convertTo(normalize_mat, CV_8U);
+        const uchar* pSrc = (const uchar*)normalize_mat.data;
+        // Create QImage with same dimensions as input Mat
+        QImage image(pSrc, normalize_mat.cols, normalize_mat.rows, normalize_mat.step, QImage::Format_RGB888);
+        return image.rgbSwapped();
+    }
+    case CV_64FC1:
+    {
+        Mat normalize_mat;
+        normalize(mat, normalize_mat, 0, 255, NORM_MINMAX, -1);
+        normalize_mat.convertTo(normalize_mat, CV_8U);
+        const uchar* pSrc = (const uchar*)normalize_mat.data;
+        QImage image(pSrc, normalize_mat.cols, normalize_mat.rows, normalize_mat.step, QImage::Format_Grayscale8);
+        return image.copy();
+    }
+    case CV_64FC3:
+    {
+        Mat normalize_mat;
+        normalize(mat, normalize_mat, 0, 255, NORM_MINMAX, -1);
+        normalize_mat.convertTo(normalize_mat, CV_8U);
+        const uchar* pSrc = (const uchar*)normalize_mat.data;
+        // Create QImage with same dimensions as input Mat
+        QImage image(pSrc, normalize_mat.cols, normalize_mat.rows, normalize_mat.step, QImage::Format_RGB888);
+        return image.rgbSwapped();
+    }
+    case CV_32SC1:
+    {
+        Mat normalize_mat;
+        normalize(mat, normalize_mat, 0, 255, NORM_MINMAX, -1);
+        normalize_mat.convertTo(normalize_mat, CV_8U);
+        const uchar* pSrc = (const uchar*)normalize_mat.data;
+        QImage image(pSrc, normalize_mat.cols, normalize_mat.rows, normalize_mat.step, QImage::Format_Grayscale8);
+        return image.copy();
+    }
+    case CV_32SC3:
+    {
+        Mat normalize_mat;
+        normalize(mat, normalize_mat, 0, 255, NORM_MINMAX, -1);
+        normalize_mat.convertTo(normalize_mat, CV_8U);
+        const uchar* pSrc = (const uchar*)normalize_mat.data;
+        // Create QImage with same dimensions as input Mat
+        QImage image(pSrc, normalize_mat.cols, normalize_mat.rows, normalize_mat.step, QImage::Format_RGB888);
+        return image.rgbSwapped();
+    }
+    case CV_16SC1:
+    {
+        Mat normalize_mat;
+        normalize(mat, normalize_mat, 0, 255, NORM_MINMAX, -1);
+        normalize_mat.convertTo(normalize_mat, CV_8U);
+        const uchar* pSrc = (const uchar*)normalize_mat.data;
+        QImage image(pSrc, normalize_mat.cols, normalize_mat.rows, normalize_mat.step, QImage::Format_Grayscale8);
+        return image.copy();
+    }
+    case CV_16SC3:
+    {
+        Mat normalize_mat;
+        normalize(mat, normalize_mat, 0, 255, NORM_MINMAX, -1);
+        normalize_mat.convertTo(normalize_mat, CV_8U);
+        const uchar* pSrc = (const uchar*)normalize_mat.data;
+        // Create QImage with same dimensions as input Mat
+        QImage image(pSrc, normalize_mat.cols, normalize_mat.rows, normalize_mat.step, QImage::Format_RGB888);
+        return image.rgbSwapped();
+    }
+    case CV_8SC1:
+    {
+        //Mat normalize_mat;
+        //normalize(mat, normalize_mat, 0, 255, NORM_MINMAX, -1);
+        mat.convertTo(mat, CV_8U);
+        const uchar* pSrc = (const uchar*)mat.data;
+        QImage image(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_Grayscale8);
+        return image.copy();
+    }
+    case CV_8SC3:
+    {
+        mat.convertTo(mat, CV_8U);
+        const uchar* pSrc = (const uchar*)mat.data;
+        QImage image(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+        return image.rgbSwapped();
+    }
+    default:
+        mat.convertTo(mat, CV_8UC3);
+        QImage image((const uchar*)mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+        return image.rgbSwapped();
+        return QImage();
+        break;
+    }
+}
+static cv::Mat QImage2cvMat(const QImage& image)
+{
+    cv::Mat mat;
+    //qDebug() << image.format();
+    switch (image.format())
+    {
+    case QImage::Format_ARGB32:
+        mat = cv::Mat(image.height(), image.width(), CV_8UC4, (void*)image.constBits(), image.bytesPerLine());
+        //cv::cvtColor(mat, mat, cv::COLOR_RGBA2BGRA);
+        break;
+    case QImage::Format_RGB32:
+    {
+        mat = cv::Mat(image.height(), image.width(), CV_8UC4, (void*)image.constBits(), image.bytesPerLine());
+        cv::Mat mat2;
+        cv::cvtColor(mat, mat2, cv::COLOR_BGRA2BGR); //4é€šé“è½¬æ¢ä¸º3é€šé“,ä»…ä»…æŠŠé€šé“Aå»æ‰,BGRä¸å˜
+        mat = mat2.clone();
+        //cv::cvtColor(mat, mat, cv::COLOR_RGBA2BGRA);
+        //cv::cvtColor(mat, mat, CV_BGR2RGB);
+    }
+        break;
+    case QImage::Format_ARGB32_Premultiplied:
+        mat = cv::Mat(image.height(), image.width(), CV_8UC4, (void*)image.constBits(), image.bytesPerLine());
+        break;
+    case QImage::Format_RGB888:
+        mat = cv::Mat(image.height(), image.width(), CV_8UC3, (void*)image.constBits(), image.bytesPerLine());
+        //cv::cvtColor(mat, mat, CV_BGR2RGB);
+        break;
+    case QImage::Format_Indexed8:
+        mat = cv::Mat(image.height(), image.width(), CV_8UC1, (void*)image.constBits(), image.bytesPerLine());
+        break;
+    case QImage::Format_Grayscale8:
+        mat = cv::Mat(image.height(), image.width(), CV_8UC1, (void*)image.constBits(), image.bytesPerLine());
+        break;
+    }
+    return mat;
 }
