@@ -35,10 +35,10 @@ int main(int argc, char *argv[])
     QtComposeResultCalculator w;
     w.show();
 #endif
-    //QtGetWindowInfo b;
-    //b.show();
-    QtGrabWindow c;
-    c.show();
+    QtGetWindowInfo b;
+    b.show();
+   // QtGrabWindow c;
+   // c.show();
     //QtMyClipboard d;
     //d.show();
     //QtTestWidget e;

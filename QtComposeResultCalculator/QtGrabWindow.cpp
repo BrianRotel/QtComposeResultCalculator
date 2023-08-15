@@ -642,11 +642,21 @@ void QtGrabWindow::slotTimer()
 	{
 		Sleep(1500);
 		mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP | MOUSEEVENTF_MOVE, clickP.x() * bx, clickP.y() * by, 0, 0);
+		//::ScreenToClient(hwnd, &pos); // 把pos转成相对于窗口客户区的坐标
+		//qDebug() << "x1" << pos.x << "y1" << pos.y;
+		//::SetFocus(hwnd);
+		//bool isS = ::SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM((long)clickP.x(), (long)clickP.y()));
+		//bool isS1 = ::SendMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM((long)clickP.x(), (long)clickP.y()));
+		//bool isS = ::SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM(pos.x, pos.y));
+		//bool isS1 = ::SendMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(pos.x, pos.y));
+		//qDebug() << "isS" << isS;
+		//qDebug() << "isS1" << isS1;
+		//qDebug() << "error:" << GetLastError();
 		QTimer::singleShot(2000, this, &QtGrabWindow::clickOther);
 	}
 	qDebug() << "R" << QString::number(pixcolor.red());//255 127
-	qDebug() << "G" << QString::number(pixcolor.green());//0 15
-	qDebug() << "B" << QString::number(pixcolor.blue());//0 15
+	//qDebug() << "G" << QString::number(pixcolor.green());//0 15
+	//qDebug() << "B" << QString::number(pixcolor.blue());//0 15
 
 #if 0
 	//QImage img2 = pix.toImage();
@@ -698,8 +708,12 @@ int main(int argc, char* argv[])
 void QtGrabWindow::clickOther()
 {
 	mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP | MOUSEEVENTF_MOVE, clickP.x()* bx, (clickP.y() - 70)* by, 0, 0);
+	//::SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM(clickP.x(), clickP.y()-70));
+	//::SendMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(clickP.x(), clickP.y()-70));
 	Sleep(200);
 	mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP | MOUSEEVENTF_MOVE, clickP.x() * bx, (clickP.y() + 70) * by, 0, 0);
+	//::SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM(clickP.x(), clickP.y()+70));
+	//::SendMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(clickP.x(), clickP.y()+70));
 }
 void QtGrabWindow::mouseMoveEvent(QMouseEvent* event)
 {

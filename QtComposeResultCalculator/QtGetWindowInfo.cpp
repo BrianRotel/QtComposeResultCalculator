@@ -3,9 +3,12 @@
 #include "QtCrosshairLabelClick.h"
 #include <QMetaType>
 #include <tlhelp32.h>
-
+//#define Get_ALL_Window
 // 三种获取所有进程的方法调用在构造的 #if 0 代码块中
-#if 0
+#ifdef Get_ALL_Window
+#include <Windows.h>
+#include <iostream>
+#include <tchar.h>
 struct ProcessInfo {
 
 	QString processID;              //进程ID
@@ -93,6 +96,35 @@ BOOL MyEnumProc(HWND hwnd, LPARAM param)
 	free(lpString);
 	return TRUE;
 }
+static BOOL CALLBACK enumchildWindowCallback(HWND hWnd, LPARAM lparam) {
+	TCHAR buffer[256] = {};
+	GetWindowText(hWnd, buffer, 256);
+	int n = (int)hWnd;
+	if (IsWindowVisible(hWnd))
+	{
+		RECT rc;
+		GetWindowRect(hWnd, &rc);
+		//_tprintf(TEXT("0x%x : %s  %d %d\n"), n, buffer, rc.right - rc.left, rc.bottom - rc.top);
+		qDebug() << (TEXT("0x%x \n"), n) << QString::fromStdWString(buffer) << rc.right - rc.left << rc.bottom - rc.top; // 打印出有标题的窗口
+	}
+	return TRUE;
+}
+
+static BOOL CALLBACK enumWindowCallback(HWND hWnd, LPARAM m) {
+	TCHAR buffer[256] = {};
+	GetWindowText(hWnd, buffer, 256);
+	int n = (int)hWnd;
+	if (IsWindowVisible(hWnd))
+	{
+		RECT rc;
+		GetWindowRect(hWnd, &rc);
+		//_tprintf(TEXT("0x%x : %s  %d %d\n"), n, buffer, rc.right - rc.left, rc.bottom - rc.top);
+		//qDebug() << (TEXT("0x%x : %s  %d %d\n"), n, buffer, rc.right - rc.left, rc.bottom - rc.top); // 打印出有标题的窗口
+		qDebug() << (TEXT("0x%x \n"), n) << QString::fromStdWString(buffer) << rc.right - rc.left << rc.bottom - rc.top; // 打印出有标题的窗口
+		EnumChildWindows(hWnd, enumchildWindowCallback, m);
+	}
+	return TRUE;
+}
 #endif
 QtGetWindowInfo::QtGetWindowInfo(QWidget *parent)
 	: QWidget(parent)
@@ -101,30 +133,52 @@ QtGetWindowInfo::QtGetWindowInfo(QWidget *parent)
 	//多线程适用
 	qRegisterMetaType<WindowInfo>("WindowInfo");
 
-#if 0 //可用
+#ifdef Get_ALL_Window //可用
+	//LPCWSTR className = TEXT("UnityWndClass");//UnrealWindow UnityWndClass
+	//LPCWSTR winName = TEXT("IdleSpiral");//剑灵 IdleSpiral
+	//HWND hwnd = FindWindow(className, winName);
+	//if (IsWindowVisible(hwnd))
+	//{
+	//	EnumChildWindows(hwnd, enumchildWindowCallback, NULL);
+	//}
+#if 1
+	//[0]获取所有进程及其子窗口
+	///_tprintf(TEXT("Enmumerating windows..."));
+	//EnumWindows(enumWindowCallback, NULL);
+	//[0.1]根据父窗口获取子窗口
+	//HWND hwnd = (HWND)0x000D0DEE; //父窗口的句柄
+	//EnumChildWindows(hwnd, enumchildWindowCallback, NULL);
+	//[0.1]根据父窗口获取子窗口
+	//[0]获取所有进程及其子窗口
+
 	//[1]获取所有进程
 	getSnapshot();
 	for (size_t i = 0; i < m_vec.length(); i++)
 	{
 
-		if (m_vec.at(i).processName.contains("IdleSpiral"))
+		//if (m_vec.at(i).processName.contains("IdleSpiral"))//GameOverlayUI.exe
 		{
 			qDebug() <<
-				m_vec.at(i).processID << " " <<
-				m_vec.at(i).threadNum << " " <<
-				m_vec.at(i).parentProcessID << " " <<
-				m_vec.at(i).processPri << " " <<
-				m_vec.at(i).processHandle << " " <<
-				m_vec.at(i).processName;
+				"进程ID" << m_vec.at(i).processID << " " <<
+				"该进程开启的线程数" << m_vec.at(i).threadNum << " " <<
+				"父进程ID" << m_vec.at(i).parentProcessID << " " <<
+				"线程优先权" << m_vec.at(i).processPri << " " <<
+				"进程句柄" << m_vec.at(i).processHandle << " " <<
+				"名称"<< m_vec.at(i).processName;
 		}
-	}//[1]
+	}
+#endif
+#if 0
+
+	//[1]获取所有进程
 	//[2]获取所有窗口
 	m_nNum = 0;
 	EnumWindows(enumAllWindow, (LPARAM)"");
 	//[2]
 	//[3]获取所有窗口(只是含有标题)
-	EnumWindows(MyEnumProc, 0);
+	//EnumWindows(MyEnumProc, 0);
 	//[3]
+#endif // 0
 #endif
 	myLabel = new QtCrosshairLabelClick();
 	
