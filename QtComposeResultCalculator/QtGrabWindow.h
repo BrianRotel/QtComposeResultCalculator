@@ -60,6 +60,7 @@ private slots:
 	void slotTimer();
 private:
 	QImage findPicture(QImage src, QImage child);
+	void getPosition();
 	void mouseMoveEvent(QMouseEvent* event);
 	void clickOther();
 private:

@@ -36,6 +36,7 @@ QtGrabWindow::QtGrabWindow(QWidget *parent)
 	setMouseTracking(true);
 	this->centralWidget()->setMouseTracking(true);
 	//drawOnce();
+	QTimer::singleShot(1000, this, &QtGrabWindow::getPosition);
 
 
 }
@@ -607,6 +608,17 @@ QImage QtGrabWindow::findPicture(QImage src, QImage child)
 #endif // 0
 	return cvMat2QImage(srcImg);
 }
+
+void QtGrabWindow::getPosition()
+{
+	QPixmap pix = QPixmap::fromImage(myGrabWindow((WId)hwnd, false));
+	if (!pix)
+	{
+		return;
+	}
+	//::SetForegroundWindow(hwnd);
+	QImage showImg = findPicture(pix.toImage(), QImage(":/QtComposeResultCalculator/Resource/test2.png"));
+}
 void QtGrabWindow::slotTimer()
 {
 	QElapsedTimer e;
@@ -617,9 +629,17 @@ void QtGrabWindow::slotTimer()
 	{
 		return;
 	}
-	//::SetForegroundWindow(hwnd);
-
-	QImage showImg = findPicture(pix.toImage(), QImage(":/QtComposeResultCalculator/Resource/test2.png"));
+	if (clickP.x() < 0 || clickP.x() > m_pScreen->size().width() || clickP.y() < 0 || clickP.y() > m_pScreen->size().height())
+	{
+		return;
+	}
+	
+	::SetForegroundWindow(hwnd);
+	qDebug() << "GrabWindow to image timeElapsed: " << e.elapsed();
+	//e.restart();
+	//QImage showImg = findPicture(pix.toImage(), QImage(":/QtComposeResultCalculator/Resource/test2.png"));
+	//qDebug() << "findPicture timeElapsed: " << e.elapsed();
+	e.restart();
 
 	QWindow* windowLogin = QWindow::fromWinId((WId)hwnd);
 	windowLogin->setFramePosition(QPoint(0,31));
@@ -627,9 +647,7 @@ void QtGrabWindow::slotTimer()
 	POINT pos = { clickP.x(),clickP.y() };
 	//GetCursorPos(&pos);
 	//qDebug() << "x" << pos.x << "y" << pos.y;
-	clickP.setY(clickP.y()+31);
 
-	qDebug() << clickP;
 
 
 	//qDebug() << mapToGlobal(clickP);
@@ -643,9 +661,11 @@ void QtGrabWindow::slotTimer()
 	//keybd_event(119, 0, KEYEVENTF_KEYUP, 0);
 	// 
 	//showImg.setPixelColor(1207, 989-31,QColor(0,0,255));
-	QColor pixcolor = showImg.pixelColor(QPoint(1207, 889 - 31));
+	QColor pixcolor = pix.toImage().pixelColor(QPoint(1207, 889 - 31));
 	if (pixcolor.red() != 255)
 	{
+		clickP.setY(clickP.y() + 31);
+		qDebug() << clickP;
 		Sleep(1500);
 		mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP | MOUSEEVENTF_MOVE, clickP.x() * bx, clickP.y() * by, 0, 0);
 		//::ScreenToClient(hwnd, &pos); // 把pos转成相对于窗口客户区的坐标
@@ -700,7 +720,7 @@ void QtGrabWindow::slotTimer()
 	this->setPalette(palette);
 	resize(pix.size());
 #endif // DEBUG
-	qDebug() <<"timeElapsed"<< e.elapsed();
+	qDebug() << "ohter timeElapsed: " << e.elapsed();
 }
 void RemoteClick(HWND hWnd, POINT pP, UINT Msg)
 {
@@ -829,6 +849,7 @@ void QtGrabWindow::clickOther()
 	mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP | MOUSEEVENTF_MOVE, clickP.x() * bx, (clickP.y() + 70) * by, 0, 0);
 	//::SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM(clickP.x(), clickP.y()+70));
 	//::SendMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(clickP.x(), clickP.y()+70));
+	clickP.setY(clickP.y() - 31);
 }
 void QtGrabWindow::mouseMoveEvent(QMouseEvent* event)
 {
