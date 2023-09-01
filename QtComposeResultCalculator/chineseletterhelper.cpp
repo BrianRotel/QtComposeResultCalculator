@@ -5760,6 +5760,7 @@ QStringList ChineseLetterHelper::readPYFile(const QString& fileName)
         listPY = str.split(" ");
     }
     return listPY;
+
 }
 
 QString ChineseLetterHelper::Ch2PY(const QString& src, QStringList listPY)

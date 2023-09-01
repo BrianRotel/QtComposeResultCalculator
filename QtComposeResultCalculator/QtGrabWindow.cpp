@@ -36,9 +36,8 @@ QtGrabWindow::QtGrabWindow(QWidget *parent)
 	setMouseTracking(true);
 	this->centralWidget()->setMouseTracking(true);
 	//drawOnce();
+	qDebug() << "test vs update";
 	QTimer::singleShot(1000, this, &QtGrabWindow::getPosition);
-
-
 }
 
 QtGrabWindow::~QtGrabWindow()
